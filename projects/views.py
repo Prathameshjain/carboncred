@@ -229,3 +229,27 @@ class ProjectCreateAPIView(generics.CreateAPIView):
 
 	def perform_create(self, serializer):
 		serializer.save(issuer=self.request.user)
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
+import random
+
+class ProjectVerifyAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(operation_id="projects_verify", responses={200: "Verification result"})
+    def post(self, request, id):
+        # Mock AI verification logic
+        verified = True
+        impact_score = random.randint(70, 95)
+        verification_report = "Tree cover increased by 12% compared to baseline."
+        # Mock blockchain tx hash
+        blockchain_tx_hash = f"0x{random.randint(10**11, 10**12-1):x}def456"
+        return Response({
+            "projectId": f"proj_{id}",
+            "verified": verified,
+            "impactScore": impact_score,
+            "verificationReport": verification_report,
+            "blockchainTxHash": blockchain_tx_hash
+        }, status=status.HTTP_200_OK)

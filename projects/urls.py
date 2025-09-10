@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import ProjectCreateAPIView, ProjectListAPIView, ProjectDetailAPIView, ProjectUpdateAPIView, ProjectEvidenceUploadAPIView
+from .views import ProjectCreateAPIView, ProjectListAPIView, ProjectDetailAPIView, ProjectUpdateAPIView, ProjectEvidenceUploadAPIView, ProjectVerifyAPIView
 
 urlpatterns = [
     path('', ProjectListAPIView.as_view(), name='projects_list_all'),
@@ -8,4 +8,5 @@ urlpatterns = [
     path('<int:id>/', ProjectDetailAPIView.as_view(), name='projects_byid_read'),
     path('<int:id>/update/', ProjectUpdateAPIView.as_view(), name='projects_update'),
     path('<int:id>/upload-evidence/', ProjectEvidenceUploadAPIView.as_view(), name='projects_upload_evidence'),
+    path('<int:id>/verify/', ProjectVerifyAPIView.as_view(), name='projects_verify'),
 ]
