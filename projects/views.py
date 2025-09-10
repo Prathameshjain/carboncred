@@ -7,6 +7,29 @@ from django.contrib.auth.models import User
 from accounts.models import Profile
 from rest_framework import serializers
 
+
+class ProjectListSerializer(serializers.ModelSerializer):
+	impactScore = serializers.SerializerMethodField()
+	location = serializers.SerializerMethodField()
+
+	class Meta:
+		model = Project
+		fields = ["id", "title", "type", "location", "status", "impactScore"]
+
+	def get_impactScore(self, obj):
+		# Placeholder: implement actual impact score logic if available
+		return getattr(obj, "impactScore", None)
+
+	def get_location(self, obj):
+		# For demo, return a string if available, else fallback to lat/lon
+		loc = obj.location
+		if isinstance(loc, dict):
+			if "region" in loc:
+				return loc["region"]
+			if "latitude" in loc and "longitude" in loc:
+				return f"Lat: {loc['latitude']}, Lon: {loc['longitude']}"
+		return str(loc)
+
 class ProjectSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = Project
@@ -20,6 +43,44 @@ class ProjectSerializer(serializers.ModelSerializer):
 		rep = super().to_representation(instance)
 		rep["id"] = f"proj_{instance.id}"
 		return rep
+from rest_framework import filters
+
+class ProjectListAPIView(generics.ListAPIView):
+	serializer_class = ProjectListSerializer
+	queryset = Project.objects.all()
+	filter_backends = [filters.OrderingFilter]
+
+	def get_queryset(self):
+		qs = Project.objects.all()
+		user = self.request.user
+		params = self.request.query_params
+
+		# Filtering by status, type, region
+		status_param = params.get("status")
+		type_param = params.get("type")
+		region_param = params.get("region")
+
+		if status_param:
+			qs = qs.filter(status=status_param)
+		if type_param:
+			qs = qs.filter(type=type_param)
+		if region_param:
+			qs = qs.filter(location__region__icontains=region_param)
+
+		# Role-based visibility
+		if user.is_authenticated:
+			try:
+				role = user.profile.role
+				if role == "buyer":
+					qs = qs.filter(status="approved")
+				# regulators see all, issuers see their own + all?
+			except Profile.DoesNotExist:
+				qs = qs.none()
+		else:
+			# Unauthenticated users see only approved
+			qs = qs.filter(status="approved")
+
+		return qs
 
 class IsIssuer(permissions.BasePermission):
 	def has_permission(self, request, view):
