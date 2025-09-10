@@ -8,6 +8,26 @@ from accounts.models import Profile
 from rest_framework import serializers
 
 
+
+class ProjectDetailSerializer(serializers.ModelSerializer):
+	impactScore = serializers.SerializerMethodField()
+	evidenceFiles = serializers.SerializerMethodField()
+
+	class Meta:
+		model = Project
+		fields = [
+			"id", "title", "type", "location", "budget", "plannedCredits",
+			"status", "impactScore", "evidenceFiles", "createdAt"
+		]
+
+	def get_impactScore(self, obj):
+		# Placeholder: implement actual impact score logic if available
+		return getattr(obj, "impactScore", None)
+
+	def get_evidenceFiles(self, obj):
+		# Placeholder: return a list of IPFS hashes if available
+		return getattr(obj, "evidenceFiles", [])
+
 class ProjectListSerializer(serializers.ModelSerializer):
 	impactScore = serializers.SerializerMethodField()
 	location = serializers.SerializerMethodField()
@@ -17,11 +37,9 @@ class ProjectListSerializer(serializers.ModelSerializer):
 		fields = ["id", "title", "type", "location", "status", "impactScore"]
 
 	def get_impactScore(self, obj):
-		# Placeholder: implement actual impact score logic if available
 		return getattr(obj, "impactScore", None)
 
 	def get_location(self, obj):
-		# For demo, return a string if available, else fallback to lat/lon
 		loc = obj.location
 		if isinstance(loc, dict):
 			if "region" in loc:
@@ -29,6 +47,12 @@ class ProjectListSerializer(serializers.ModelSerializer):
 			if "latitude" in loc and "longitude" in loc:
 				return f"Lat: {loc['latitude']}, Lon: {loc['longitude']}"
 		return str(loc)
+from rest_framework.generics import RetrieveAPIView
+
+class ProjectDetailAPIView(RetrieveAPIView):
+	queryset = Project.objects.all()
+	serializer_class = ProjectDetailSerializer
+	lookup_field = "id"
 
 class ProjectSerializer(serializers.ModelSerializer):
 	class Meta:
