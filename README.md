@@ -39,12 +39,13 @@ README.md         # Project documentation
 
 ---
 
+
 ## Setup & Installation
 
 ### Prerequisites
-- Python 3.10+
-- Docker & Docker Compose
-- Node.js (for frontend, if applicable)
+- Python 3.9+
+- PostgreSQL (local or via Docker)
+- Docker & Docker Compose (optional, for containerized DB)
 
 ### 1. Clone the repository
 ```sh
@@ -53,14 +54,32 @@ cd <project-directory>
 ```
 
 ### 2. Set up environment variables
-- Copy `.env.example` to `.env` and update values as needed.
+- Copy `.env.example` to `.env` and update values as needed for your local or Docker PostgreSQL setup.
 
-### 3. Start PostgreSQL with Docker Compose
-```sh
-docker-compose up -d
-```
+### 3. Set up PostgreSQL
+
+#### Option A: Local PostgreSQL
+1. Make sure PostgreSQL is running on your machine.
+2. Create the database:
+   ```sh
+   psql -U <your_postgres_user> -c "CREATE DATABASE carboncred;"
+   ```
+3. Update `.env` with your local DB credentials (host: 127.0.0.1, port: 5432).
+
+#### Option B: Docker PostgreSQL
+1. Start the database:
+   ```sh
+   docker-compose up -d
+   ```
+2. Update `.env` with Docker DB credentials if different.
 
 ### 4. Create and activate a Python virtual environment
+#### macOS/Linux:
+```sh
+python3 -m venv venv
+source venv/bin/activate
+```
+#### Windows:
 ```sh
 python -m venv venv
 .\venv\Scripts\activate
@@ -80,6 +99,8 @@ python manage.py migrate
 ```sh
 python manage.py runserver
 ```
+
+---
 
 ---
 
@@ -108,15 +129,33 @@ POSTGRES_PORT=5432
 
 ---
 
-## API Endpoints
+
+## API Endpoints & Documentation
+
+### Main Endpoints
 - `POST /api/accounts/register/` — Register a new user
 - `POST /api/accounts/login/` — Obtain JWT token
 - `POST /api/accounts/refresh/` — Refresh JWT token
 
+### API Documentation (Swagger & Redoc)
+- Swagger UI: [http://127.0.0.1:8000/swagger/](http://127.0.0.1:8000/swagger/)
+- Redoc: [http://127.0.0.1:8000/redoc/](http://127.0.0.1:8000/redoc/)
+
+#### Importing to Postman
+1. Open Swagger UI at `/swagger/`.
+2. Click "Download" or "Export" to get the OpenAPI JSON.
+3. In Postman, click "Import" and select the OpenAPI file or paste the URL (e.g., `http://127.0.0.1:8000/swagger.json`).
+4. All endpoints will be imported for testing.
+
 ---
 
+
 ## Development Commands
-- Activate virtual environment:
+- Activate virtual environment (macOS/Linux):
+   ```sh
+   source venv/bin/activate
+   ```
+- Activate virtual environment (Windows):
    ```sh
    .\venv\Scripts\activate
    ```
@@ -137,6 +176,21 @@ POSTGRES_PORT=5432
 
 ## License
 MIT License © 2025 Prathameshjain
+
+---
+
+---
+
+## Requirements
+
+Key Python dependencies (see `requirements.txt`):
+- Django
+- djangorestframework
+- django-environ
+- djangorestframework-simplejwt
+- django-cors-headers
+- psycopg2
+- drf-yasg
 
 ---
 For more details, see the project documentation and code comments.
