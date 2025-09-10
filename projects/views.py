@@ -1,3 +1,44 @@
+from rest_framework.generics import UpdateAPIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import PermissionDenied
+from rest_framework import serializers
+from django.utils import timezone
+from .models import Project
+
+class ProjectUpdateSerializer(serializers.ModelSerializer):
+	updatedAt = serializers.DateTimeField(read_only=True)
+
+	class Meta:
+		model = Project
+		fields = ["id", "budget", "plannedCredits", "updatedAt"]
+		read_only_fields = ["id", "updatedAt"]
+
+class ProjectUpdateAPIView(UpdateAPIView):
+	def get_view_name(self):
+		if self.request and self.request.method == "PUT":
+			return "projects_update_Full"
+		elif self.request and self.request.method == "PATCH":
+			return "projects_update_Selective"
+		return super().get_view_name()
+
+	queryset = Project.objects.all()
+	serializer_class = ProjectUpdateSerializer
+	lookup_field = "id"
+	permission_classes = [IsAuthenticated]
+
+	def get_object(self):
+		obj = super().get_object()
+		user = self.request.user
+		# Only issuer who owns the project can update
+		if not hasattr(user, "profile") or user.profile.role != "issuer" or obj.issuer != user:
+			raise PermissionDenied("Only the issuer who created this project can update it.")
+		# Only if not verified/approved
+		if obj.status == "approved":
+			raise PermissionDenied("Cannot update a verified/approved project.")
+		return obj
+
+	def perform_update(self, serializer):
+		serializer.save(updatedAt=timezone.now())
 
 from rest_framework import generics, status, permissions
 from rest_framework.response import Response
@@ -5,7 +46,6 @@ from rest_framework.exceptions import PermissionDenied
 from .models import Project
 from django.contrib.auth.models import User
 from accounts.models import Profile
-from rest_framework import serializers
 
 
 
@@ -50,6 +90,9 @@ class ProjectListSerializer(serializers.ModelSerializer):
 from rest_framework.generics import RetrieveAPIView
 
 class ProjectDetailAPIView(RetrieveAPIView):
+	def get_view_name(self):
+		return "projects_byid_read"
+
 	queryset = Project.objects.all()
 	serializer_class = ProjectDetailSerializer
 	lookup_field = "id"
@@ -70,6 +113,9 @@ class ProjectSerializer(serializers.ModelSerializer):
 from rest_framework import filters
 
 class ProjectListAPIView(generics.ListAPIView):
+	def get_view_name(self):
+		return "projects_list_all"
+
 	serializer_class = ProjectListSerializer
 	queryset = Project.objects.all()
 	filter_backends = [filters.OrderingFilter]
@@ -116,6 +162,9 @@ class IsIssuer(permissions.BasePermission):
 			return False
 
 class ProjectCreateAPIView(generics.CreateAPIView):
+	def get_view_name(self):
+		return "projects_create"
+
 	serializer_class = ProjectSerializer
 	permission_classes = [permissions.IsAuthenticated, IsIssuer]
 
