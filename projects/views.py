@@ -1,9 +1,51 @@
+from rest_framework import serializers
+from rest_framework.permissions import IsAuthenticated
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework.views import APIView
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.response import Response
+from rest_framework import status
+import datetime
+import random
+
+# Minimal serializer for evidence upload
+class EvidenceUploadSerializer(serializers.Serializer):
+	file = serializers.FileField()
+	type = serializers.ChoiceField(choices=["satellite", "drone", "document"])
+
+# Minimal mock IPFS upload function
+def mock_ipfs_upload(file):
+	# In real use, upload to IPFS and return the hash
+	return f"Qm{random.randint(10000,99999)}abc"
+
+# Evidence upload API view
+class ProjectEvidenceUploadAPIView(APIView):
+	parser_classes = [MultiPartParser, FormParser]
+	permission_classes = [IsAuthenticated]
+
+	@swagger_auto_schema(operation_id="projects_upload_evidence", request_body=EvidenceUploadSerializer, responses={200: "Evidence uploaded"})
+	def post(self, request, id):
+		serializer = EvidenceUploadSerializer(data=request.data)
+		if serializer.is_valid():
+			uploaded_file = serializer.validated_data["file"]
+			print(f"[UPLOAD] Project ID: {id}, File name: {uploaded_file.name}, Size: {uploaded_file.size} bytes, Content type: {uploaded_file.content_type}")
+			# Mock IPFS upload
+			ipfs_hash = mock_ipfs_upload(uploaded_file)
+			file_url = f"ipfs://{ipfs_hash}"
+			uploaded_at = datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+			return Response({
+				"projectId": f"proj_{id}",
+				"fileUrl": file_url,
+				"uploadedAt": uploaded_at
+			}, status=status.HTTP_200_OK)
+		return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 from rest_framework.generics import UpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
 from rest_framework import serializers
 from django.utils import timezone
 from .models import Project
+from drf_yasg.utils import swagger_auto_schema
 
 class ProjectUpdateSerializer(serializers.ModelSerializer):
 	updatedAt = serializers.DateTimeField(read_only=True)
@@ -14,6 +56,14 @@ class ProjectUpdateSerializer(serializers.ModelSerializer):
 		read_only_fields = ["id", "updatedAt"]
 
 class ProjectUpdateAPIView(UpdateAPIView):
+	@swagger_auto_schema(operation_id="projects_update_Full")
+	def put(self, request, *args, **kwargs):
+		return super().put(request, *args, **kwargs)
+
+	@swagger_auto_schema(operation_id="projects_update_Selective")
+	def patch(self, request, *args, **kwargs):
+		return super().patch(request, *args, **kwargs)
+
 	def get_view_name(self):
 		if self.request and self.request.method == "PUT":
 			return "projects_update_Full"
@@ -90,6 +140,10 @@ class ProjectListSerializer(serializers.ModelSerializer):
 from rest_framework.generics import RetrieveAPIView
 
 class ProjectDetailAPIView(RetrieveAPIView):
+	@swagger_auto_schema(operation_id="projects_byid_read")
+	def get(self, request, *args, **kwargs):
+		return super().get(request, *args, **kwargs)
+
 	def get_view_name(self):
 		return "projects_byid_read"
 
@@ -113,8 +167,9 @@ class ProjectSerializer(serializers.ModelSerializer):
 from rest_framework import filters
 
 class ProjectListAPIView(generics.ListAPIView):
-	def get_view_name(self):
-		return "projects_list_all"
+	@swagger_auto_schema(operation_id="projects_list_all")
+	def get(self, request, *args, **kwargs):
+		return super().get(request, *args, **kwargs)
 
 	serializer_class = ProjectListSerializer
 	queryset = Project.objects.all()
@@ -162,6 +217,10 @@ class IsIssuer(permissions.BasePermission):
 			return False
 
 class ProjectCreateAPIView(generics.CreateAPIView):
+	@swagger_auto_schema(operation_id="projects_create")
+	def post(self, request, *args, **kwargs):
+		return super().post(request, *args, **kwargs)
+
 	def get_view_name(self):
 		return "projects_create"
 
