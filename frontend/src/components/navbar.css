@@ -1,0 +1,60 @@
+@import url('https://fonts.googleapis.com/css2?family=Balsamiq+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
+:root {
+  --font-balsamiq: "Balsamiq Sans", sans-serif;
+}
+
+.navbar {
+    display: flex;
+    min-width: 50rem;
+    flex-direction: row;
+    padding: 10px;
+}
+
+
+.navbar-container{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+}
+.navbar-logo{
+    display: flex;
+    flex-direction: row;
+    color:#228b22;
+    font-family: "Balsamiq Sans";
+
+}
+.Navbar-menu{
+    display: flex;
+    flex-direction: row;
+}
+.list-container{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+}
+.navbar-items {
+    padding: 10px;
+    display: flex;
+    flex-direction: row;
+    background: none;
+    color: #333;
+    border: none;
+}
+
+.login-btn {
+    background-color: #228b22!important;
+    border-radius: 2rem;
+    height: 2.5rem;
+    border: none;
+}
+
+.search-input::placeholder {
+    text-align: center;
+}
+
+.font-balsamiq {
+    font-family: 'Balsamiq Sans', cursive;
+}
