@@ -10,6 +10,8 @@ import {
   TrendingUp,
   Shield,
 } from "lucide-react";
+import { Link } from "react-router-dom";
+import GradientBg from '../assets/GradientBg.png';
 
 export default function CarbonLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -64,7 +66,9 @@ export default function CarbonLoginPage() {
   return (
     <div className="min-h-screen flex">
       {/* Left Side - Login Form */}
-      <div className="flex-1 flex items-center justify-center px-8 py-12 bg-white">
+      <div className="lg:w-3/5 flex items-center justify-center px-8 py-12 bg-white"
+        style={{ backgroundImage: `url(${GradientBg})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
+
         <div className="w-full max-w-md space-y-8">
           {/* Logo and Header */}
           <div className="text-center">
@@ -72,9 +76,9 @@ export default function CarbonLoginPage() {
               <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
                 <Leaf className="w-6 h-6 text-white" />
               </div>
-              <span className="text-2xl font-bold text-gray-900">
-                CarbonCred
-              </span>
+              <span className="text-2xl font-bold">
+                  Carbon<span className="text-green-600">Cred</span>
+                </span>
             </div>
             <h2 className="text-3xl font-bold text-gray-900 mb-2">
               Welcome back
@@ -165,19 +169,19 @@ export default function CarbonLoginPage() {
                   Remember me
                 </label>
               </div>
-              <a
-                href="#"
-                className="text-sm text-green-600 hover:text-green-500 font-medium"
+              <Link
+                to="#"
+                className="text-sm text-green-600 hover:text-green-500 font-medium !no-underline"
               >
                 Forgot password?
-              </a>
+              </Link>
             </div>
 
             {/* Sign In Button */}
             <button
               type="button"
               onClick={handleSubmit}
-              className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+              className="w-3/4 rounded bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
             >
               Sign in to your account
             </button>
@@ -187,12 +191,12 @@ export default function CarbonLoginPage() {
           <div className="text-center">
             <p className="text-gray-600">
               Don't have an account?{" "}
-              <a
-                href="/register"
-                className="text-green-600 hover:text-green-500 font-medium"
+              <Link
+                to="/Registration"
+                className="text-green-600 hover:text-green-500 font-medium !no-underline"
               >
                 Start your carbon journey
-              </a>
+              </Link>
             </p>
           </div>
 
@@ -214,7 +218,7 @@ export default function CarbonLoginPage() {
       </div>
 
       {/* Right Side - Visual/Info Panel */}
-      <div className="hidden lg:flex flex-1 bg-gradient-to-br from-green-600 via-green-700 to-emerald-800 relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-2/5 bg-gradient-to-br from-green-600 via-green-700 to-emerald-800 relative overflow-hidden justify-center">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-20 left-20 w-32 h-32 border-2 border-white rounded-full animate-pulse"></div>

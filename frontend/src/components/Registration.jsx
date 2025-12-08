@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import GradientBg from '../assets/GradientBg.png';
 
 import {
   Eye,
@@ -74,10 +75,15 @@ export default function CarbonLoginPage() {
         navigate("/Dashboard");
       }
     } catch (error) {
-      console.log(error);
-      if (error.response) {
+      console.log("BACKEND ERROR:", error.response?.data);
+      if (error.response?.data) {
         // Backend returned an error
-        setErrorMessage(error.response.data.message || "Registration failed");
+      const apiErrors = error.response.data;
+      const readable = Object.entries(apiErrors)
+      .map(([field, messages]) => `${field}: ${messages}`)
+      .join("\n");
+
+      setErrorMessage(readable || "Registration failed");
       } else {
         setErrorMessage("Server not reachable");
       }
@@ -87,17 +93,18 @@ export default function CarbonLoginPage() {
   return (
     <div className="min-h-screen flex">
       {/* Left Side - Form */}
-      <div className="flex-1 flex items-center justify-center px-8 py-12 bg-white">
-        <div className="w-full max-w-3xl">
+      <div className="lg:w-3/5 flex items-center justify-center px-8 py-12 bg-white"
+        style={{ backgroundImage: `url(${GradientBg})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
+        <div className="w-full max-w-xl">
           {/* Header */}
           <div className="text-center mb-8">
             <div className="flex items-center justify-center space-x-2 mb-4">
               <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
                 <Leaf className="w-6 h-6 text-white" />
               </div>
-              <span className="text-2xl font-bold text-gray-900">
-                CarbonCred
-              </span>
+              <span className="text-2xl font-bold">
+                  Carbon<span className="text-green-600">Cred</span>
+                </span>
             </div>
             <h2 className="text-3xl font-bold text-gray-900 mb-2">Register</h2>
             <p className="text-gray-600">
@@ -268,16 +275,17 @@ export default function CarbonLoginPage() {
             </div>
 
             {/* Active Since */}
-            <div className="md:col-span-2">
+            <div className="md:col-span-2 flex flex-col items-center">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Active Since
               </label>
+
               <input
                 type="date"
                 name="active_since"
                 value={formData.active_since}
                 onChange={handleInputChange}
-                className="block w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500"
+                className="w-1/2 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500"
                 required
               />
             </div>
@@ -286,7 +294,7 @@ export default function CarbonLoginPage() {
             <div className="md:col-span-2">
               <button
                 type="submit"
-                className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-[1.02]"
+                className="w-1/2 rounded bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-3 transition-all duration-200 transform hover:scale-[1.02]"
               >
                 Register
               </button>
@@ -294,16 +302,18 @@ export default function CarbonLoginPage() {
           </form>
 
           {/* Security Note */}
-          <div className="mt-2 bg-gray-50 rounded-lg p-4 border border-gray-200">
-            <Shield className="w-5 h-5 text-gray-600 mt-0.5 flex-shrink-0" />
-            <div className="justify-center space-x-2">
-              <div className=" position top z-0 items-center">
-                <p className="text-sm text-gray-700 font-medium">
-                  Secure Login
-                </p>
-                <p className="text-xs text-gray-600">
-                  Your data is protected with enterprise-grade security
-                </p>
+          <div className="flex flex-col items-center">
+            <div className="w-3/4 mt-4 bg-gray-50 rounded-lg p-3 border border-gray-200">
+              <Shield className="w-5 h-5 text-gray-600 mt-0.5 flex-shrink-0" />
+              <div className="justify-center space-x-2">
+                <div className=" position top z-0 items-center">
+                  <p className="text-sm text-gray-700 font-medium">
+                    Secure Login
+                  </p>
+                  <p className="text-xs text-gray-600">
+                    Your data is protected with enterprise-grade security
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -311,7 +321,7 @@ export default function CarbonLoginPage() {
       </div>
 
       {/* Right Side - Visual/Info Panel */}
-      <div className="hidden lg:flex flex-1 bg-gradient-to-br from-green-600 via-green-700 to-emerald-800 relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-2/5 bg-gradient-to-br from-green-600 via-green-700 to-emerald-800 relative overflow-hidden justify-center">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-20 left-20 w-32 h-32 border-2 border-white rounded-full animate-pulse"></div>

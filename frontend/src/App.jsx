@@ -3,6 +3,7 @@ import Home from "./components/Home";
 import Login from "./components/Login";
 import Registration from "./components/Registration";
 import Dashboard from "./components/Dashboard";
+import Marketplace from "./components/Marketplace";
 import "./App.css";
 
 function App() {
@@ -13,6 +14,7 @@ function App() {
         <Route path="/Login" element={<Login/>}/>
         <Route path="/Registration" element={<Registration/>}/>
         <Route path="/Dashboard" element={<Dashboard/>}/>
+        <Route path="/Marketplace" element={<Marketplace/>}/>
       </Routes>
     </>
   );

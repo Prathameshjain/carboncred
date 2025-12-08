@@ -27,6 +27,7 @@ CarbonCred is a decentralized carbon credit marketplace. It enables transparent,
 
 ## Project Structure
 ```
+backend/          # Django project settings and configuration
 accounts/         # User registration, authentication, and management
 credits/          # Carbon credit models and logic
 projects/         # Project management for carbon credit generation
@@ -37,13 +38,28 @@ docker-compose.yml # Docker setup for PostgreSQL
 README.md         # Project documentation
 ```
 
+### Key Directories
+- **backend/** - Django settings, CORS, and URL routing
+- **accounts/** - User authentication, registration, JWT tokens
+- **credits/** - Carbon credit data models and business logic
+- **projects/** - Project creation and management
+- **frontend/** - React.js application with Vite bundler
+
 ---
 
+## Tech Stack
+- **Backend**: Django, Django REST Framework, JWT Authentication
+- **Frontend**: React 19, Vite, React Router, TailwindCSS, Bootstrap
+- **Database**: PostgreSQL (via Docker)
+- **API Documentation**: Swagger UI & Redoc
+
+---
 
 ## Setup & Installation
 
 ### Prerequisites
 - Python 3.9+
+- Node.js 18+ and npm (for frontend)
 - PostgreSQL (local or via Docker)
 - Docker & Docker Compose (optional, for containerized DB)
 
@@ -100,6 +116,21 @@ python manage.py migrate
 python manage.py runserver
 ```
 
+### 8. Frontend Setup (React)
+1. Navigate to the frontend directory:
+   ```sh
+   cd frontend
+   ```
+2. Install dependencies:
+   ```sh
+   npm install
+   ```
+3. Start the development server:
+   ```sh
+   npm run dev
+   ```
+4. The frontend will be available at `http://localhost:5173`
+
 ---
 
 ---
@@ -151,6 +182,8 @@ POSTGRES_PORT=5432
 
 
 ## Development Commands
+
+### Backend Commands
 - Activate virtual environment (macOS/Linux):
    ```sh
    source venv/bin/activate
@@ -172,6 +205,28 @@ POSTGRES_PORT=5432
    python manage.py runserver
    ```
 
+### Frontend Commands
+- Install dependencies:
+   ```sh
+   npm install
+   ```
+- Start development server:
+   ```sh
+   npm run dev
+   ```
+- Build for production:
+   ```sh
+   npm run build
+   ```
+- Preview production build:
+   ```sh
+   npm run preview
+   ```
+- Run ESLint:
+   ```sh
+   npm run lint
+   ```
+
 ---
 
 ## License
@@ -191,6 +246,14 @@ Key Python dependencies (see `requirements.txt`):
 - django-cors-headers
 - psycopg2
 - drf-yasg
+
+Key JavaScript dependencies (see `frontend/package.json`):
+- React 19
+- Vite
+- React Router DOM
+- Axios
+- Bootstrap
+- TailwindCSS
 
 ---
 For more details, see the project documentation and code comments.

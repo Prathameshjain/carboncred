@@ -10,8 +10,6 @@ env = environ.Env()
 environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
 
-
-
 """
 Django settings for backend project.
 
@@ -35,8 +33,15 @@ SECRET_KEY = 'django-insecure-b7#%e$l%wcino*ljtmeht1&y!oy7p8ox&%iexx!8w48onfz)ba
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    "127.0.0.1",
+    "localhost",
+]
 
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173"
+]
 
 # Application definition
 
