@@ -58,7 +58,7 @@ const Dashboard = () => {
               <Menu size={24} className="text-slate-700" />
             </button>
             <div className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg">
+              <div className="w-10 h-10 rounded-xl bg-linear-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg">
                 <Leaf size={24} className="text-white" />
               </div>
               <span className="text-2xl font-bold text-black bg-clip-text">
@@ -87,7 +87,7 @@ const Dashboard = () => {
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
                 className="flex items-center gap-2 p-2 hover:bg-white/40 rounded-xl transition-colors"
               >
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-400 to-cyan-400 flex items-center justify-center shadow-md">
+                <div className="w-9 h-9 rounded-xl bg-linear-to-br from-teal-400 to-cyan-400 flex items-center justify-center shadow-md">
                   <User size={18} className="text-white" />
                 </div>
                 <ChevronDown size={16} className="text-slate-600" />
@@ -133,7 +133,7 @@ const Dashboard = () => {
             ].map((stat, idx) => (
               <div 
                 key={idx}
-                className="group relative overflow-hidden rounded-lg backdrop-blur-xl bg-gradient-to-br from-white/60 to-white/40 border border-white/30 p-6 hover:border-white/50 transition-all shadow-lg hover:shadow-2xl cursor-pointer"
+                className="group relative overflow-hidden rounded-lg backdrop-blur-xl bg-linear-to-br from-white/60 to-white/40 border border-white/30 p-6 hover:border-white/50 transition-all shadow-lg hover:shadow-2xl cursor-pointer"
               >
                 <div className="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-5 transition-opacity" />
                 <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.color} shadow-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
