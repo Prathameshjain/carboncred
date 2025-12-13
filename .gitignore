@@ -67,3 +67,15 @@ htmlcov/
 dist/
 build/
 
+# -----------------------
+# Editors & IDEs
+# -----------------------
+ml-verification/synthetic_data
+ml-verification/venv/
+ml-verification/src/models/checkpoints/
+
+# Large model files (use Git LFS or download separately)
+*.keras
+*.h5
+*.ckpt
+*.pb

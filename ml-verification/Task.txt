@@ -1,0 +1,126 @@
+You are operating inside the CarbonCred project.
+
+This repository already contains:
+- Synthetic satellite/drone-style datasets (validated via sanitycheck.py)
+- Vegetation masks, NDVI, NIR, and RGB imagery
+- A stable directory structure that MUST NOT be changed
+
+Current structure (locked):
+
+ml-verification/
+├─ src/
+│  ├─ datasets.py
+│  ├─ preprocessing.py
+│  ├─ train.py
+│  ├─ evaluate.py
+│  ├─ sanitycheck.py
+│  └─ models/
+│     ├─ unet_ndvi.py
+│     └─ resnet_solar.py
+├─ synthetic_data/
+│  ├─ images/
+│  ├─ masks/
+│  ├─ ndvi/
+│  ├─ nir/
+│  └─ dataset_manifest.csv
+├─ requirements.txt
+└─ README.md
+
+Sanity check has PASSED.
+Synthetic data generation is COMPLETE.
+NO new data should be generated.
+
+────────────────────────────────────
+PRIMARY OBJECTIVE
+────────────────────────────────────
+Implement the complete AI/ML verification pipeline for CarbonCred.
+
+The pipeline must:
+1. Verify real vegetation presence (segmentation)
+2. Detect vegetation consistency over time
+3. Classify solar installations vs non-solar
+4. Produce reproducible evaluation metrics
+5. Be ready for backend API integration later
+
+────────────────────────────────────
+STRICT CONSTRAINTS (MANDATORY)
+────────────────────────────────────
+- DO NOT modify directory structure
+- DO NOT regenerate datasets
+- DO NOT hallucinate new CSV columns
+- DO NOT mix solar and vegetation models
+- DO NOT add blockchain or web code
+- Use TensorFlow / Keras only
+- Keep models explainable and lightweight
+- All paths must resolve relative to src/
+
+────────────────────────────────────
+TASKS TO COMPLETE (EXECUTE IN ORDER)
+────────────────────────────────────
+
+1) Vegetation Segmentation Model (NDVI-based)
+   - Finalize models/unet_ndvi.py
+   - Input: NDVI images (256x256x1)
+   - Output: vegetation mask (256x256x1, sigmoid)
+   - Loss: Binary Crossentropy + Dice loss
+   - Metrics: IoU and Dice score
+
+2) Dataset Loader
+   - Update datasets.py to support:
+     a) vegetation segmentation dataset
+     b) solar classification dataset
+   - Load paths ONLY from dataset_manifest.csv
+   - Return TensorFlow tf.data.Dataset objects
+   - Include batching, shuffling, and normalization
+
+3) Training Pipeline
+   - Update train.py to support two modes:
+     a) train_vegetation
+     b) train_solar
+   - Use argparse flags:
+     --task vegetation | solar
+   - Save models to:
+     src/models/checkpoints/
+
+4) Evaluation Pipeline
+   - Implement evaluate.py to:
+     - Load trained models
+     - Run evaluation on validation split
+     - Print IoU, Dice (vegetation)
+     - Print Accuracy, Precision, Recall (solar)
+
+5) Model Consistency Check
+   - For vegetation:
+     - Compare predictions across multiple time frames
+     - Flag unrealistic vegetation jumps
+     - Output a simple consistency score
+
+6) Documentation
+   - Update README.md with:
+     - How to train vegetation model
+     - How to train solar model
+     - How to evaluate models
+     - Expected outputs
+
+────────────────────────────────────
+QUALITY REQUIREMENTS
+────────────────────────────────────
+- Code must be deterministic and readable
+- Every function must have a clear purpose
+- No placeholder logic
+- No TODO comments left behind
+- No unused imports
+
+────────────────────────────────────
+FINAL OUTPUT EXPECTATION
+────────────────────────────────────
+After completion, a user should be able to run:
+
+1) python train.py --task vegetation
+2) python train.py --task solar
+3) python evaluate.py --task vegetation
+4) python evaluate.py --task solar
+
+and obtain meaningful, reproducible results.
+
+Proceed step by step. Do not skip tasks. Do not assume missing data.
