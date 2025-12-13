@@ -1,0 +1,29 @@
+{
+  "report_id": "RPT-20251213_195321",
+  "generated_at": "2025-12-13T19:53:21.512734",
+  "verification_result": {
+    "project_name": "Urban Green Belt Project",
+    "project_type": "vegetation",
+    "final_decision": "REVIEW_REQUIRED",
+    "confidence_score": 0.763,
+    "claim_alignment": "LOW",
+    "key_metrics": {
+      "vegetation_score": 0.763,
+      "mean_iou": 0.72,
+      "mean_dice": 0.81,
+      "temporal_consistency": 0.88,
+      "vegetation_coverage_pct": 75.0,
+      "vegetation_growth_pct": 10.0,
+      "ndvi_change": 0.1,
+      "soil_health_index": 0.8,
+      "estimated_carbon_sequestration_tco2_year": 93.75,
+      "aqi_improvement_proxy": 0.6,
+      "claim_gap_pct": 30.0,
+      "area_hectares": 25.0
+    },
+    "explanation": "\u26a0 REVIEW REQUIRED\n\nThe project requires manual review due to the following concerns:\n\nANALYSIS SUMMARY:\n\u2022 Vegetation detection accuracy (IoU): 72.0%\n\u2022 Segmentation quality (Dice): 81.0%\n\u2022 Temporal consistency: 88.0%\n\u2022 Current vegetation coverage: 75.0%\n\u2022 Measured vegetation growth: 10.0%\n\nENVIRONMENTAL IMPACT:\n\u2022 Estimated carbon sequestration: 93.75 tCO\u2082/year\n\nCLAIM VERIFICATION:\n\u2022 User claim exceeds measured growth by 30.0%\n\nDECISION RATIONALE:\n\u2022 Claim gap (30.00%) exceeds threshold (15.0%)",
+    "decision_reasons": [
+      "Claim gap (30.00%) exceeds threshold (15.0%)"
+    ]
+  }
+}

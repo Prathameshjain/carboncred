@@ -1,0 +1,29 @@
+{
+  "report_id": "RPT-20251213_195310",
+  "generated_at": "2025-12-13T19:53:10.484501",
+  "verification_result": {
+    "project_name": "Sahyadri Forest Restoration",
+    "project_type": "vegetation",
+    "final_decision": "REJECTED",
+    "confidence_score": 0.5,
+    "claim_alignment": "MEDIUM",
+    "key_metrics": {
+      "vegetation_score": 0.5,
+      "mean_iou": 0.45,
+      "mean_dice": 0.55,
+      "temporal_consistency": 0.65,
+      "vegetation_coverage_pct": 75.0,
+      "vegetation_growth_pct": 10.0,
+      "ndvi_change": 0.1,
+      "soil_health_index": 0.8,
+      "estimated_carbon_sequestration_tco2_year": 450.0,
+      "aqi_improvement_proxy": 0.6,
+      "claim_gap_pct": 15.0,
+      "area_hectares": 120.0
+    },
+    "explanation": "\u2717 PROJECT REJECTED\n\nThe project does not meet minimum verification standards:\n\nANALYSIS SUMMARY:\n\u2022 Vegetation detection accuracy (IoU): 45.0%\n\u2022 Segmentation quality (Dice): 55.0%\n\u2022 Temporal consistency: 65.0%\n\u2022 Current vegetation coverage: 75.0%\n\u2022 Measured vegetation growth: 10.0%\n\nENVIRONMENTAL IMPACT:\n\u2022 Estimated carbon sequestration: 450.00 tCO\u2082/year\n\nCLAIM VERIFICATION:\n\u2022 User claim exceeds measured growth by 15.0%\n\nDECISION RATIONALE:\n\u2022 Mean IoU (0.4500) below threshold (0.5)",
+    "decision_reasons": [
+      "Mean IoU (0.4500) below threshold (0.5)"
+    ]
+  }
+}

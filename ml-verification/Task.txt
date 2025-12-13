@@ -1,126 +1,200 @@
-You are operating inside the CarbonCred project.
+You are continuing development of the CarbonCred project.
 
-This repository already contains:
-- Synthetic satellite/drone-style datasets (validated via sanitycheck.py)
-- Vegetation masks, NDVI, NIR, and RGB imagery
-- A stable directory structure that MUST NOT be changed
+========================================
+PROJECT CONTEXT
+========================================
+CarbonCred is a blockchain-based carbon credit verification platform.
+Users submit high-level project details and images.
+The system independently verifies claims using AI models and
+produces explainable environmental impact metrics and decisions.
 
-Current structure (locked):
+The ML models (vegetation UNet + solar ResNet) are already trained,
+evaluated, and saved. Do NOT modify or retrain them.
 
+========================================
+USER INPUTS (ONLY THESE COME FROM USERS)
+========================================
+Users can provide ONLY the following:
+
+- project_name (string)
+- project_type ("vegetation" or "solar")
+- project_coordinates (lat/long or polygon, dummy allowed)
+- project_area_hectares (float)
+- project_cost_lakh_inr (float)
+- project_images (satellite or drone images)
+- claimed_improvement_pct (float)
+
+Users will NEVER provide technical ML metrics.
+
+========================================
+SYSTEM-GENERATED INPUTS (INTERNAL ONLY)
+========================================
+The system derives these automatically:
+- vegetation masks
+- NDVI images
+- solar probabilities
+- IoU, Dice scores
+- temporal consistency
+- land-use classification
+
+========================================
+CURRENT DIRECTORY (DO NOT CHANGE)
+========================================
 ml-verification/
 ├─ src/
+│  ├─ models/
 │  ├─ datasets.py
 │  ├─ preprocessing.py
 │  ├─ train.py
 │  ├─ evaluate.py
 │  ├─ sanitycheck.py
-│  └─ models/
-│     ├─ unet_ndvi.py
-│     └─ resnet_solar.py
+│  └─ (new files allowed here)
 ├─ synthetic_data/
-│  ├─ images/
-│  ├─ masks/
-│  ├─ ndvi/
-│  ├─ nir/
-│  └─ dataset_manifest.csv
-├─ requirements.txt
-└─ README.md
+├─ README.md
+└─ requirements.txt
 
-Sanity check has PASSED.
-Synthetic data generation is COMPLETE.
-NO new data should be generated.
+========================================
+PRIMARY GOAL
+========================================
+Build a user-aware verification and impact assessment layer that:
 
-────────────────────────────────────
-PRIMARY OBJECTIVE
-────────────────────────────────────
-Implement the complete AI/ML verification pipeline for CarbonCred.
+1. Converts user claims + AI outputs into final decisions
+2. Justifies WHY a project is VERIFIED / REVIEW_REQUIRED / REJECTED
+3. Produces human-readable, regulator-ready reports
+4. Works for BOTH vegetation and solar projects
 
-The pipeline must:
-1. Verify real vegetation presence (segmentation)
-2. Detect vegetation consistency over time
-3. Classify solar installations vs non-solar
-4. Produce reproducible evaluation metrics
-5. Be ready for backend API integration later
+========================================
+STRICT RULES
+========================================
+- Do NOT retrain models
+- Do NOT regenerate data
+- Do NOT require technical user inputs
+- Do NOT use external APIs
+- Use deterministic formulas only
+- All assumptions must be explicit
+- Outputs must be JSON-serializable
+- Keep logic explainable to non-technical users
 
-────────────────────────────────────
-STRICT CONSTRAINTS (MANDATORY)
-────────────────────────────────────
-- DO NOT modify directory structure
-- DO NOT regenerate datasets
-- DO NOT hallucinate new CSV columns
-- DO NOT mix solar and vegetation models
-- DO NOT add blockchain or web code
-- Use TensorFlow / Keras only
-- Keep models explainable and lightweight
-- All paths must resolve relative to src/
+========================================
+TASKS TO IMPLEMENT
+========================================
 
-────────────────────────────────────
-TASKS TO COMPLETE (EXECUTE IN ORDER)
-────────────────────────────────────
+────────────────────────────────────────
+1) Create src/verification_engine.py
+────────────────────────────────────────
 
-1) Vegetation Segmentation Model (NDVI-based)
-   - Finalize models/unet_ndvi.py
-   - Input: NDVI images (256x256x1)
-   - Output: vegetation mask (256x256x1, sigmoid)
-   - Loss: Binary Crossentropy + Dice loss
-   - Metrics: IoU and Dice score
+Implement a class:
 
-2) Dataset Loader
-   - Update datasets.py to support:
-     a) vegetation segmentation dataset
-     b) solar classification dataset
-   - Load paths ONLY from dataset_manifest.csv
-   - Return TensorFlow tf.data.Dataset objects
-   - Include batching, shuffling, and normalization
+class CarbonCredVerificationEngine:
 
-3) Training Pipeline
-   - Update train.py to support two modes:
-     a) train_vegetation
-     b) train_solar
-   - Use argparse flags:
-     --task vegetation | solar
-   - Save models to:
-     src/models/checkpoints/
+INPUTS:
+- user_metadata (dict):
+    - project_name
+    - project_type
+    - project_area_hectares
+    - project_cost_lakh_inr
+    - claimed_improvement_pct
+- ai_outputs (dict):
+    - mean_iou
+    - mean_dice
+    - temporal_consistency
+    - vegetation_masks
+    - ndvi_images
+    - solar_probability (optional)
 
-4) Evaluation Pipeline
-   - Implement evaluate.py to:
-     - Load trained models
-     - Run evaluation on validation split
-     - Print IoU, Dice (vegetation)
-     - Print Accuracy, Precision, Recall (solar)
+────────────────────────────────────────
+2) VEGETATION VERIFICATION LOGIC
+────────────────────────────────────────
 
-5) Model Consistency Check
-   - For vegetation:
-     - Compare predictions across multiple time frames
-     - Flag unrealistic vegetation jumps
-     - Output a simple consistency score
+Compute internal score:
+vegetation_score =
+    0.6 * mean_iou +
+    0.3 * mean_dice +
+    0.1 * temporal_consistency
 
-6) Documentation
-   - Update README.md with:
-     - How to train vegetation model
-     - How to train solar model
-     - How to evaluate models
-     - Expected outputs
+Impact metrics:
+- vegetation_coverage_pct
+- vegetation_growth_pct
+- ndvi_change
+- soil_health_index = 1 − NDVI_variance
+- estimated_carbon_sequestration:
+    5.0 tCO₂ / hectare / year × area × coverage
+- aqi_improvement_proxy = coverage × soil_health_index
 
-────────────────────────────────────
-QUALITY REQUIREMENTS
-────────────────────────────────────
-- Code must be deterministic and readable
-- Every function must have a clear purpose
-- No placeholder logic
-- No TODO comments left behind
-- No unused imports
+Claim alignment:
+claim_gap = claimed_improvement_pct − vegetation_growth_pct
 
-────────────────────────────────────
-FINAL OUTPUT EXPECTATION
-────────────────────────────────────
-After completion, a user should be able to run:
+Decision rules:
+- mean_iou < 0.5 → REJECTED
+- temporal_consistency < 0.7 → REVIEW_REQUIRED
+- claim_gap > 15% → REVIEW_REQUIRED
+- else → VERIFIED
 
-1) python train.py --task vegetation
-2) python train.py --task solar
-3) python evaluate.py --task vegetation
-4) python evaluate.py --task solar
+────────────────────────────────────────
+3) SOLAR VERIFICATION LOGIC
+────────────────────────────────────────
 
-and obtain meaningful, reproducible results.
+Compute impact metrics:
+- estimated_panel_area (from segmentation)
+- estimated_energy_mwh_year =
+    panel_area × 4.5 × 365 × 0.18
+- avoided_co2_tco2_year =
+    energy × 0.7
 
-Proceed step by step. Do not skip tasks. Do not assume missing data.
+Decision rules:
+- solar_probability < 0.4 → REJECTED
+- land_use_conflict detected → REVIEW_REQUIRED
+- claimed_improvement_pct inconsistent with avoided CO2 → REVIEW_REQUIRED
+- else → VERIFIED
+
+────────────────────────────────────────
+4) VERIFICATION OUTPUT FORMAT
+────────────────────────────────────────
+
+Return a JSON-serializable dict:
+
+{
+  "project_name": "...",
+  "project_type": "...",
+  "final_decision": "...",
+  "confidence_score": 0–1,
+  "claim_alignment": "HIGH | MEDIUM | LOW",
+  "key_metrics": { ... },
+  "explanation": "Human-readable justification"
+}
+
+────────────────────────────────────────
+5) CLI ENTRYPOINT
+────────────────────────────────────────
+
+Create src/verify.py
+
+Command:
+python verify.py --project <project_id>
+
+This should:
+- Load user metadata
+- Load AI evaluation results
+- Run verification engine
+- Print decision and explanation
+- Save JSON to src/reports/
+
+────────────────────────────────────────
+6) Update README.md
+────────────────────────────────────────
+
+Add sections:
+- User Inputs vs System Evidence
+- Verification Logic (Vegetation & Solar)
+- Why CarbonCred Prevents Fake Credits
+
+========================================
+SUCCESS CRITERIA
+========================================
+- No technical inputs required from users
+- End-to-end verification works for both project types
+- Output is understandable to regulators
+- Logic is deterministic and auditable
+- System clearly explains WHY a project passed or failed
+
+Proceed carefully and implement ONLY what is specified.

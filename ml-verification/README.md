@@ -203,6 +203,150 @@ The vegetation evaluation includes a consistency check that:
 
 This helps detect potential fraud or data anomalies in carbon credit claims.
 
+## User Inputs vs System Evidence
+
+CarbonCred separates user-provided claims from system-verified evidence:
+
+### User Inputs (What Users Provide)
+| Field | Description |
+|-------|-------------|
+| `project_name` | Name of the carbon credit project |
+| `project_type` | "vegetation" or "solar" |
+| `project_coordinates` | Geographic location (lat/lon or polygon) |
+| `project_area_hectares` | Total project area in hectares |
+| `project_cost_lakh_inr` | Project cost in lakhs INR |
+| `claimed_improvement_pct` | User's claimed environmental improvement |
+| `project_images` | Satellite or drone imagery |
+
+### System Evidence (AI-Generated)
+| Field | Description |
+|-------|-------------|
+| `mean_iou` | Vegetation detection accuracy (0-1) |
+| `mean_dice` | Segmentation quality score (0-1) |
+| `temporal_consistency` | Change consistency over time (0-1) |
+| `vegetation_coverage_pct` | Detected vegetation coverage |
+| `ndvi_change` | Measured NDVI difference |
+| `solar_probability` | Solar panel detection confidence |
+| `estimated_carbon_seq` | Calculated CO₂ sequestration |
+
+## Verification Logic
+
+### Vegetation Projects
+
+**Score Calculation:**
+```
+vegetation_score = 0.6 × mean_iou + 0.3 × mean_dice + 0.1 × temporal_consistency
+```
+
+**Impact Metrics:**
+- `estimated_carbon_sequestration = 5.0 tCO₂/hectare/year × area × coverage`
+- `soil_health_index = 1 - NDVI_variance`
+- `aqi_improvement_proxy = coverage × soil_health_index`
+
+**Decision Rules:**
+| Condition | Decision |
+|-----------|----------|
+| `mean_iou < 0.5` | REJECTED |
+| `temporal_consistency < 0.7` | REVIEW_REQUIRED |
+| `claim_gap > 15%` | REVIEW_REQUIRED |
+| All criteria met | VERIFIED |
+
+### Solar Projects
+
+**Energy Calculation:**
+```
+estimated_energy_mwh = panel_area × 4.5 hours × 365 days × 0.18 efficiency
+avoided_co2_tco2 = energy × 0.7 (grid emission factor)
+```
+
+**Decision Rules:**
+| Condition | Decision |
+|-----------|----------|
+| `solar_probability < 0.4` | REJECTED |
+| Land use conflict detected | REVIEW_REQUIRED |
+| Claim inconsistent with CO₂ | REVIEW_REQUIRED |
+| All criteria met | VERIFIED |
+
+## Project Verification CLI
+
+Run verification on projects:
+
+```bash
+cd src
+
+# List available projects
+python verify.py --list
+
+# Verify a vegetation project
+python verify.py --project veg_001
+
+# Verify a solar project
+python verify.py --project solar_001
+
+# Output JSON only
+python verify.py --project veg_001 --output json
+```
+
+**Sample Output:**
+```
+============================================================
+CARBONCRED VERIFICATION REPORT
+============================================================
+
+Project: Green Valley Reforestation
+Type: VEGETATION
+Decision: VERIFIED
+Confidence: 72.8%
+Claim Alignment: MEDIUM
+
+------------------------------------------------------------
+KEY METRICS
+------------------------------------------------------------
+  Vegetation Score: 0.7265
+  Mean Iou: 0.7279
+  Mean Dice: 0.8305
+  Temporal Consistency: 0.9851
+  Vegetation Coverage Pct: 75.00
+  Estimated Carbon Sequestration Tco2 Year: 187.50
+
+------------------------------------------------------------
+EXPLANATION
+------------------------------------------------------------
+✓ PROJECT VERIFIED
+
+The vegetation project has been verified based on satellite imagery analysis.
+...
+```
+
+## Why CarbonCred Prevents Fake Credits
+
+CarbonCred's verification system is designed to prevent fraudulent carbon credit claims:
+
+### 1. **Independent Evidence Generation**
+- AI models analyze satellite imagery independently
+- Users cannot manipulate IoU, Dice, or NDVI values
+- System-generated metrics override user claims
+
+### 2. **Temporal Consistency Checks**
+- Detects unrealistic vegetation changes (>15% jumps)
+- Flags suspicious patterns for manual review
+- Tracks project evolution over time
+
+### 3. **Claim Alignment Verification**
+- Compares user claims against measured data
+- High claim gaps trigger REVIEW_REQUIRED
+- Prevents over-reporting of environmental impact
+
+### 4. **Deterministic Decision Rules**
+- Clear thresholds for VERIFIED/REVIEW_REQUIRED/REJECTED
+- No subjective interpretation
+- Fully auditable decision logic
+
+### 5. **Explainable Outputs**
+- Every decision includes detailed rationale
+- Regulators can understand WHY projects passed/failed
+- JSON-serializable for integration with external systems
+
 ## Requirements
 
 - Python 3.8+
