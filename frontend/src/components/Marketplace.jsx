@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import Sidebar from "../components/Sidebar";
 import { Button } from "../components/ui/button";
+import Sidebar from "./ui/Sidebar";
+import Navbar from "./ui/Navbar";
 import {
   Card,
   CardContent,
@@ -110,10 +111,10 @@ const Marketplace = () => {
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  const handleBack = () => {
-    setToastMessage("Back navigation would return to dashboard");
-    setTimeout(() => setToastMessage(null), 2000);
-  };
+  // const handleBack = () => {
+  //   setToastMessage("Back navigation would return to dashboard");
+  //   setTimeout(() => setToastMessage(null), 2000);
+  // };
 
   const filteredProjects = projects.filter(
     (project) =>
@@ -129,45 +130,10 @@ const Marketplace = () => {
       style={{ backgroundImage: `url(${GradientBg})` }}
     >
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-40 backdrop-blur-xl bg-white/70 border-b border-white/20">
-        <div className="flex justify-between items-center px-6 py-4">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 hover:bg-gray-200 rounded-xl transition-colors"
-            >
-              <Menu size={24} className="text-slate-700" />
-            </button>
-
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
-                <Leaf className="w-6 h-6 text-white" />
-              </div>
-
-              {/* Title and Subtitle aligned properly */}
-              <div className="flex flex-col items-start">
-                <h1 className="text-xl font-bold text-black bg-clip-text">
-                  Carbon Credit Marketplace
-                </h1>
-                {/* <p className="text-2xs text-slate-800">
-                  Browse and purchase verified credits
-                </p> */}
-              </div>
-            </div>
-          </div>
-          <button
-            onClick={() => navigate("/")}
-            className="relative text-gray-900 font-medium pb-1 
-                after:absolute after:left-0 after:-bottom-1 after:h-[2px] after:w-0 after:bg-green-500 
-                after:transition-all after:duration-300 hover:after:w-full"
-          >
-            Signout
-          </button>
-        </div>
-      </header>
+      <Navbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
       {/* Sidebar */}
-      <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+      <Sidebar sidebarOpen={sidebarOpen} />
       {/* Background Overlay for readability */}
       <div className="absolute inset-0"></div>
 

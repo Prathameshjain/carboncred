@@ -16,6 +16,8 @@ import {
 export default function CarbonLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -58,12 +60,11 @@ export default function CarbonLoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log("Registration attempt:", formData);
-
+    setLoading(true);
     // Clear previous errors
     setErrorMessage("");
 
     try {
-      // Replace this URL with Prathamesh's backend registration API
       const response = await axios.post(
         "http://127.0.0.1:8000/api/accounts/register/",
         formData
@@ -71,22 +72,22 @@ export default function CarbonLoginPage() {
 
       if (response.status === 201 || response.status === 200) {
         alert("Registration successful!");
-        // Optionally redirect to login page
-        navigate("/Dashboard");
+        navigate("/Login");
       }
     } catch (error) {
       console.log("BACKEND ERROR:", error.response?.data);
       if (error.response?.data) {
-        // Backend returned an error
-      const apiErrors = error.response.data;
-      const readable = Object.entries(apiErrors)
-      .map(([field, messages]) => `${field}: ${messages}`)
-      .join("\n");
+        const apiErrors = error.response.data;
+        const readable = Object.entries(apiErrors)
+          .map(([field, messages]) => `${field}: ${messages}`)
+          .join("\n");
 
-      setErrorMessage(readable || "Registration failed");
+        setErrorMessage(readable || "Registration failed");
       } else {
         setErrorMessage("Server not reachable");
       }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -294,9 +295,11 @@ export default function CarbonLoginPage() {
             <div className="md:col-span-2">
               <button
                 type="submit"
-                className="w-1/2 rounded bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-3 transition-all duration-200 transform hover:scale-[1.02]"
+                disabled={loading}
+                className={`mt-4 w-full py-2 rounded text-white font-semibold 
+                  ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-500"}`}
               >
-                Register
+                {loading ? "Registering..." : "Register"}
               </button>
             </div>
           </form>

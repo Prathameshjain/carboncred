@@ -1,4 +1,4 @@
-import Navbar from "./Navbar";
+import Navbar from "./ui/Navbarhome";
 import React from 'react';
 import { useNavigate } from "react-router-dom";
 import backgroundImage from "../assets/homeBG.jpg";
@@ -28,7 +28,7 @@ export default function CarbonCredHomepage() {
                 <button 
                   onClick={()=>navigate("/Login")}
                   className="relative text-gray-900 font-medium pb-1 after:absolute after:left-0 after:-bottom-1 
-                  after:h-[2px] after:w-0 after:bg-green-500 after:transition-all after:duration-300 hover:after:w-full ">
+                  after:h-0.5 after:w-0 after:bg-green-500 after:transition-all after:duration-300 hover:after:w-full ">
                 Login</button>
               </div>
             </div>
@@ -181,7 +181,7 @@ export default function CarbonCredHomepage() {
 
               {/* Illustration placeholder */}
               <div className=" rounded-lg p-3  shadow-lg">
-                <div className=" bg-gradient-to-br from-green-50 to-blue-50 rounded-4xl flex items-center justify-center">
+                <div className=" bg-linear-to-br from-green-50 to-blue-50 rounded-4xl flex items-center justify-center">
                   <img 
                   src={contextImg} />
                 </div>

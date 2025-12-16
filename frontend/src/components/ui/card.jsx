@@ -1,12 +1,11 @@
 import * as React from "react";
 
-// Utility function to merge classNames
 const cn = (...classes) => {
   return classes.filter(Boolean).join(" ");
 };
 
 const Card = React.forwardRef(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("rounded-lg border  border-slate-700 shadow-sm", className)} {...props} />
+  <div ref={ref} className={cn("rounded-lg border  border-slate-700 ", className)} {...props} />
 ));
 Card.displayName = "Card";
 

@@ -1,13 +1,15 @@
 import { Home, Zap, ShoppingCart, Wallet, Users, Settings, ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
+import Navbar from "./Navbar";
+import { useState } from "react";
 
-const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
+const Sidebar = ({ sidebarOpen }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
   const menuItems = [
     { icon: Home, label: "Dashboard", path: "/Dashboard" },
-    { icon: Zap, label: "Activities", path: "/activities" },
+    { icon: Zap, label: "Credits", path: "/Mycredits" },
     { icon: ShoppingCart, label: "Marketplace", path: "/Marketplace" },
     { icon: Wallet, label: "Wallet", path: "/wallet" },
     { icon: Users, label: "Community", path: "/community" },
@@ -37,7 +39,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all relative group
                   ${
                     isActive
-                      ? "bg-gradient-to-r from-green-400/30 to-teal-400/30 text-teal-700 font-medium border border-teal-200/50"
+                      ? "bg-linear-to-r from-green-400/30 to-teal-400/30 text-teal-700 font-medium border border-teal-200/50"
                       : "text-slate-600 hover:bg-white/40"
                   }`}
               >

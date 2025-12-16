@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
-import './navbar.css';
+import './navbarhome.css';
 
-function Navbar() {
+function Navbarhome() {
     const navigate = useNavigate();
     return (
         <nav className="navbar fixed-top">
@@ -21,4 +21,4 @@ function Navbar() {
         </nav>
     );
 }
-export default Navbar;
+export default Navbarhome;
