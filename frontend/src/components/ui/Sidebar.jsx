@@ -11,8 +11,7 @@ const Sidebar = ({ sidebarOpen }) => {
     { icon: Home, label: "Dashboard", path: "/Dashboard" },
     { icon: Zap, label: "Credits", path: "/Mycredits" },
     { icon: ShoppingCart, label: "Marketplace", path: "/Marketplace" },
-    { icon: Wallet, label: "Wallet", path: "/wallet" },
-    { icon: Users, label: "Community", path: "/community" },
+    { icon: Wallet, label: "History", path: "/PurchaseHistory" },
   ];
 
   return (

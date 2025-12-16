@@ -5,6 +5,7 @@ import Registration from "./components/Registration";
 import Dashboard from "./components/Dashboard";
 import Marketplace from "./components/Marketplace";
 import Mycredits from "./components/Mycredits";
+import PurchaseHistory from "./components/PurchaseHistory";
 import "./App.css";
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
         <Route path="/Dashboard" element={<Dashboard/>}/>
         <Route path="/Marketplace" element={<Marketplace/>}/>
         <Route path="/Mycredits" element={<Mycredits/>}/>
+        <Route path="/PurchaseHistory" element={<PurchaseHistory/>}/>
       </Routes>
     </>
   );

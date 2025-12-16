@@ -54,7 +54,7 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
               </button>
 
               {userMenuOpen && (
-                <div className="absolute right-0 mt-2 w-48 backdrop-blur-xl bg-white/70 border border-white/20 rounded-2xl shadow-xl overflow-hidden">
+                <div className="absolute right-0 mt-2 w-48 bg-white border border-white/20 rounded-xl shadow-xl overflow-hidden">
                   <button className="w-full px-4 py-3 text-left hover:bg-white/40 transition-colors flex items-center gap-2 text-sm">
                     <User size={16} /> Profile
                   </button>

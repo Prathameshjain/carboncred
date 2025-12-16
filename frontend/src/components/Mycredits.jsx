@@ -137,7 +137,7 @@ function Mycredits() {
                     {totalRetired.toLocaleString()}
                   </p>
                 </div>
-                <Award className="w-8 h-8 text-muted-foreground" />
+                <Award className="w-8 h-8 text-red-500" />
               </div>
             </CardContent>
           </Card>
@@ -164,7 +164,7 @@ function Mycredits() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="items-start ">Credit Holdings</CardTitle>
+                <CardTitle className="flex items-start ">Credit Holdings</CardTitle>
                 <CardDescription>
                   Your carbon credit portfolio breakdown
                 </CardDescription>
@@ -176,7 +176,7 @@ function Mycredits() {
             </div>
           </CardHeader>
 
-          <CardContent>
+          <CardContent className="pt-2 pb-6">
             <div className="space-y-4">
               {credits.map((credit) => (
                 <Card
@@ -194,8 +194,8 @@ function Mycredits() {
                           <Badge
                             className={
                               credit.status === "Active"
-                                ? "bg-success/20 text-success border-success/30"
-                                : "bg-warning/20 text-warning border-warning/30"
+                                ? "bg-green-200 text-success border-green-700"
+                                : "bg-amber-300 text-amber-700 border-red-700"
                             }
                           >
                             {credit.status}
@@ -261,7 +261,9 @@ function Mycredits() {
           </CardContent>
         </Card>
         </div>
-        {/* Footer */}
+
+      </div>
+              {/* Footer */}
         <footer className="bg-gray-900 text-white py-4">
           <div className="max-w-7xl mx-auto px-8 flex justify-between items-center">
             <div>
@@ -288,7 +290,6 @@ function Mycredits() {
             </div>
           </div>
         </footer>
-      </div>
     </div>
   );
 }

@@ -152,26 +152,6 @@ const Marketplace = () => {
           }`}
         >
           <main className="px-6 py-4 max-w-7xl mx-auto space-y-8">
-            {/* Search and Filter Bar */}
-            <div className="flex flex-col md:flex-row gap-4 mb-8">
-              <div className="flex-1 relative border-b border-slate-700">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-900 " />
-                <Input
-                  className="pl-10 text-slate-900 placeholder:text-slate-900"
-                  placeholder="Search projects by name, location, or type..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-              <Button
-                variant="outline"
-                className="gap-2 rounded bg-emerald-600 text-white border-slate-700  hover:bg-emerald-500 hover:text-white"
-              >
-                <Filter className="w-4 h-4" />
-                Filters
-              </Button>
-            </div>
-
             {/* Market Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 ">
               <Card className="bg-slate-900 border-slate-800">
@@ -215,6 +195,26 @@ const Marketplace = () => {
                   </div>
                 </CardContent>
               </Card>
+            </div>
+
+            {/* Search and Filter Bar */}
+            <div className="flex flex-col md:flex-row gap-4 mb-8">
+              <div className="flex-1 relative border-b border-slate-700">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-900 " />
+                <Input
+                  className="pl-10 text-slate-900 placeholder:text-slate-900"
+                  placeholder="Search projects by name, location, or type..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              <Button
+                variant="outline"
+                className="gap-2 rounded bg-emerald-600 text-white border-slate-700  hover:bg-emerald-500 hover:text-white"
+              >
+                <Filter className="w-4 h-4" />
+                Filters
+              </Button>
             </div>
 
             {/* Projects Grid */}
@@ -341,15 +341,14 @@ const Marketplace = () => {
                   </div>
                 )}
               </DialogContent>
-            </Dialog>
-
-            {filteredProjects.length === 0 && (
+              {filteredProjects.length === 0 && (
               <div className="text-center py-12">
                 <p className="text-slate-400 text-lg">
                   No projects found matching your search.
                 </p>
               </div>
             )}
+            </Dialog>
           </main>
         </div>
       </div>
