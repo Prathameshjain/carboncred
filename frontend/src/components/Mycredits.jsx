@@ -2,18 +2,23 @@ import React from "react";
 import { useState } from "react";
 import Sidebar from "./ui/Sidebar";
 import Navbar from "./ui/Navbar";
-import GradientBg from '../assets/GradientBg.png';
-import { 
-  Leaf, 
-  ArrowLeft,
+import Footer from "./ui/Footer";
+import GradientBg from "../assets/GradientBg.png";
+import {
   Award,
   TrendingUp,
   Calendar,
   MapPin,
   Download,
-  Eye
+  Eye,
 } from "lucide-react";
-import { Card,CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { useNavigate } from "react-router-dom";
@@ -79,217 +84,207 @@ function Mycredits() {
       className="min-h-screen bg-cover bg-center bg-no-repeat"
       style={{ backgroundImage: `url(${GradientBg})` }}
     >
-      {/* <div className="absolute inset-0"></div> */}
       {/* Top Navigation */}
-    <Navbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+      <Navbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
-      {/* Sidebar */}
-      <Sidebar sidebarOpen={sidebarOpen} />
-
-      <div
-        className={`transition-all duration-300 ${
-          sidebarOpen ? "ml-64" : "ml-0"
-        } pt-24`}
-      >
-        <div className="px-6 max-w-7xl mx-auto space-y-8 pb-4">
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-gradient-card border-border/50 shadow-md bg-slate-900 border-slate-800">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-slate-200 text-muted-foreground mb-1">
-                    Total Credits
-                  </p>
-                  <p className="text-3xl text-amber-400 font-bold">
-                    {totalCredits.toLocaleString()}
-                  </p>
-                </div>
-                <Award className="w-8 h-8 text-primary" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-card border-border/50 shadow-md bg-slate-900 border-slate-800">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-slate-200 text-muted-foreground mb-1">
-                    Active Credits
-                  </p>
-                  <p className="text-3xl font-bold text-success">
-                    {activeCredits.toLocaleString()}
-                  </p>
-                </div>
-                <TrendingUp className="w-8 h-8 text-success" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-card border-border/50 shadow-md bg-slate-900 border-slate-800">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-slate-200 text-muted-foreground mb-1">
-                    Retired Credits
-                  </p>
-                  <p className="text-3xl text-red-500 font-bold text-muted-foreground">
-                    {totalRetired.toLocaleString()}
-                  </p>
-                </div>
-                <Award className="w-8 h-8 text-red-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-card border-border/50 shadow-md bg-slate-900 border-slate-800">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-slate-200 text-muted-foreground mb-1">
-                    Portfolio Value
-                  </p>
-                  <p className="text-3xl font-bold text-blue-500">
-                    ${totalValue.toLocaleString()}
-                  </p>
-                </div>
-                <TrendingUp className="w-8 h-8 text-primary" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Credits List */}
-        <Card className="bg-gradient-card bg-white border-border/50 shadow-md">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="flex items-start ">Credit Holdings</CardTitle>
-                <CardDescription>
-                  Your carbon credit portfolio breakdown
-                </CardDescription>
-              </div>
-              <Button variant="outline" className="gap-2 rounded bg-emerald-600 border-slate-700 text-white hover:bg-emerald-500 hover:text-slate-900">
-                <Download className="w-4 h-4" />
-                Export Report
-              </Button>
-            </div>
-          </CardHeader>
-
-          <CardContent className="pt-2 pb-6">
-            <div className="space-y-4">
-              {credits.map((credit) => (
-                <Card
-                  key={credit.id}
-                  className="bg-muted/30 border-border/50 hover:shadow-xl transition-all shadow-md"
-                >
-                  <CardContent className="p-6">
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="text-lg font-semibold text-foreground">
-                            {credit.projectName}
-                          </h3>
-
-                          <Badge
-                            className={
-                              credit.status === "Active"
-                                ? "bg-green-200 text-success border-green-700"
-                                : "bg-amber-300 text-amber-700 border-red-700"
-                            }
-                          >
-                            {credit.status}
-                          </Badge>
-
-                          <Badge className="bg-primary/20 text-primary border-primary/30">
-                            {credit.type}
-                          </Badge>
-                        </div>
-
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <MapPin className="w-3 h-3" />
-                            {credit.location}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3" />
-                            Purchased: {credit.purchaseDate}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col sm:flex-row gap-4 lg:gap-8">
-                        <div className="text-center">
-                          <p className="text-sm text-muted-foreground mb-1">
-                            Total
-                          </p>
-                          <p className="text-2xl font-bold text-slate-800">
-                            {credit.amount.toLocaleString()}
-                          </p>
-                        </div>
-
-                        <div className="text-center">
-                          <p className="text-sm text-muted-foreground mb-1">
-                            Active
-                          </p>
-                          <p className="text-2xl font-bold text-success">
-                            {(credit.amount - credit.retired).toLocaleString()}
-                          </p>
-                        </div>
-
-                        <div className="text-center">
-                          <p className="text-sm text-muted-foreground mb-1">
-                            Value
-                          </p>
-                          <p className="text-2xl font-bold text-primary">
-                            ${credit.value.toLocaleString()}
-                          </p>
-                        </div>
-
-                        <div className="flex items-center">
-                          <Button variant="outline" size="sm" className="gap-2 rounded bg-emerald-600 border-slate-700 text-white hover:bg-emerald-500 hover:text-slate-900">
-                            <Eye className="w-4 h-4" />
-                            Details
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-        </div>
-
-      </div>
-              {/* Footer */}
-        <footer className="bg-gray-900 text-white py-4">
-          <div className="max-w-7xl mx-auto px-8 flex justify-between items-center">
-            <div>
-              <h3 className="text-2xl font-bold text-green-400 mb-2">CarbonCred</h3>
-              <p className="text-gray-400 text-sm">12th Floor, Jio World Centre,</p>
-              <p className="text-gray-400 text-sm">BKC Phase 2, Worli,</p>
-              <p className="text-gray-400 text-sm">Mumbai 400001</p>
-            </div>
-            
-            <div className="text-right">
-              <p className="text-gray-400 text-sm mb-4">© 2025 CarbonCred Technologies Pvt. Ltd. All rights reserved.</p>
-              <div className="flex space-x-4 justify-end">
-                <button className="text-gray-400 hover:text-white transition-colors">
-                  <svg className="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 2c5.523 0 10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2z"/>
-                  </svg>
-                </button>
-                <button className="text-gray-400 hover:text-white transition-colors">
-                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
-                  </svg>
-                </button>
-              </div>
-            </div>
+      {/* MAIN LAYOUT */}
+      <div className="flex pt-24 relative">
+        <aside
+          className={`transition-all duration-300 ${
+            sidebarOpen ? "w-64" : "w-0"
+          }`}
+        >
+          {/* SIDEBAR */}
+          <div className="sticky top-24 h-[calc(100vh-6rem)]">
+            <Sidebar sidebarOpen={sidebarOpen} />
           </div>
-        </footer>
+        </aside>
+
+        <div className="flex-1 flex flex-col">
+          <div className="flex-1 px-6 max-w-7xl mx-auto space-y-8 pb-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              <Card className="bg-gradient-card border-border/50 shadow-md bg-slate-900 border-slate-800">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-slate-200 text-muted-foreground mb-1">
+                        Total Credits
+                      </p>
+                      <p className="text-3xl text-amber-400 font-bold">
+                        {totalCredits.toLocaleString()}
+                      </p>
+                    </div>
+                    <Award className="w-8 h-8 text-primary" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-card border-border/50 shadow-md bg-slate-900 border-slate-800">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-slate-200 text-muted-foreground mb-1">
+                        Active Credits
+                      </p>
+                      <p className="text-3xl font-bold text-success">
+                        {activeCredits.toLocaleString()}
+                      </p>
+                    </div>
+                    <TrendingUp className="w-8 h-8 text-success" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-card border-border/50 shadow-md bg-slate-900 border-slate-800">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-slate-200 text-muted-foreground mb-1">
+                        Retired Credits
+                      </p>
+                      <p className="text-3xl text-red-500 font-bold text-muted-foreground">
+                        {totalRetired.toLocaleString()}
+                      </p>
+                    </div>
+                    <Award className="w-8 h-8 text-red-500" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-card border-border/50 shadow-md bg-slate-900 border-slate-800">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-slate-200 text-muted-foreground mb-1">
+                        Portfolio Value
+                      </p>
+                      <p className="text-3xl font-bold text-blue-500">
+                        ${totalValue.toLocaleString()}
+                      </p>
+                    </div>
+                    <TrendingUp className="w-8 h-8 text-primary" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Credits List */}
+            <Card className="bg-gradient-card bg-white border-border/50 shadow-md">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-start ">
+                      Credit Holdings
+                    </CardTitle>
+                    <CardDescription>
+                      Your carbon credit portfolio breakdown
+                    </CardDescription>
+                  </div>
+                  <Button
+                    variant="outline"
+                    className="gap-2 rounded bg-linear-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg shadow-emerald-500/20 group-hover:shadow-emerald-500/40"
+                  >
+                    <Download className="w-4 h-4" />
+                    Export Report
+                  </Button>
+                </div>
+              </CardHeader>
+
+              <CardContent className="pt-2 pb-6">
+                <div className="space-y-4">
+                  {credits.map((credit) => (
+                    <Card
+                      key={credit.id}
+                      className="bg-muted/30 border-border/50 hover:shadow-xl transition-all shadow-md"
+                    >
+                      <CardContent className="p-6">
+                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h3 className="text-lg font-semibold text-foreground">
+                                {credit.projectName}
+                              </h3>
+
+                              <Badge
+                                className={
+                                  credit.status === "Active"
+                                    ? "bg-green-200 text-success border-green-700"
+                                    : "bg-amber-300 text-amber-700 border-red-700"
+                                }
+                              >
+                                {credit.status}
+                              </Badge>
+
+                              <Badge className="bg-primary/20 text-primary border-primary/30">
+                                {credit.type}
+                              </Badge>
+                            </div>
+
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                              <span className="flex items-center gap-1">
+                                <MapPin className="w-3 h-3" />
+                                {credit.location}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Calendar className="w-3 h-3" />
+                                Purchased: {credit.purchaseDate}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col sm:flex-row gap-4 lg:gap-8">
+                            <div className="text-center">
+                              <p className="text-sm text-muted-foreground mb-1">
+                                Total
+                              </p>
+                              <p className="text-2xl font-bold text-slate-800">
+                                {credit.amount.toLocaleString()}
+                              </p>
+                            </div>
+
+                            <div className="text-center">
+                              <p className="text-sm text-muted-foreground mb-1">
+                                Active
+                              </p>
+                              <p className="text-2xl font-bold text-success">
+                                {(
+                                  credit.amount - credit.retired
+                                ).toLocaleString()}
+                              </p>
+                            </div>
+
+                            <div className="text-center">
+                              <p className="text-sm text-muted-foreground mb-1">
+                                Value
+                              </p>
+                              <p className="text-2xl font-bold text-primary">
+                                ${credit.value.toLocaleString()}
+                              </p>
+                            </div>
+
+                            <div className="flex items-center">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="gap-2 rounded bg-emerald-600 border-slate-700 text-white hover:bg-emerald-500 hover:text-slate-900"
+                              >
+                                <Eye className="w-4 h-4" />
+                                Details
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          {/* Footer */}
+          <Footer />
+        </div>
+      </div>
     </div>
   );
 }

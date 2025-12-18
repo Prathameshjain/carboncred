@@ -31,6 +31,7 @@ import {
   Heart,
   Share2,
   Search,
+  PlusCircle
 } from "lucide-react";
 import {
   Card,
@@ -51,6 +52,7 @@ import {
   AreaChart,
   Area,
 } from "recharts";
+import Footer from "./ui/Footer";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -109,10 +111,12 @@ const Dashboard = () => {
       className="min-h-screen bg-cover bg-center bg-no-repeat"
       style={{ backgroundImage: `url(${GradientBg})` }}
     >
-      <div className="absolute inset-0"></div>
       {/* Top Navigation */}
       <Navbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
+      <div className="flex pt-24 relative">
+
+      </div>
       {/* Sidebar */}
       <Sidebar sidebarOpen={sidebarOpen} />
 
@@ -120,9 +124,9 @@ const Dashboard = () => {
       <div
         className={`transition-all duration-300 ${
           sidebarOpen ? "ml-64" : "ml-0"
-        } pt-24 pb-8`}
+        }`}
       >
-        <div className="px-6 max-w-7xl mx-auto space-y-8">
+        <div className="px-6 max-w-7xl mx-auto space-y-8 pb-4">
           {/* Header */}
           <div className="space-y-2">
             <h1 className="text-4xl font-bold text-slate-900">
@@ -140,7 +144,7 @@ const Dashboard = () => {
                 icon: Award,
                 label: "Total Credits",
                 value: "1,245",
-                color: "from-green-400 to-teal-400",
+                color: "from-green-300 to-teal-400",
                 path: "/Mycredits",
               },
               {
@@ -154,8 +158,15 @@ const Dashboard = () => {
                 icon: Wallet,
                 label: "Wallet Balance",
                 value: "850 C",
-                color: "from-blue-400 to-indigo-400",
+                color: "from-green-400 to-teal-500",
                 path: "/wallet",
+              },
+              {
+                icon: PlusCircle,
+                label: "Add Project",
+                value: "+1",
+                color: "from-blue-400 to-cyan-500",
+                path: "/AddProject",
               },
             ].map((stat, idx) => (
               <button
@@ -398,6 +409,7 @@ const Dashboard = () => {
             </Card>
           </div>
         </div>
+        <Footer/>
       </div>
     </div>
   );

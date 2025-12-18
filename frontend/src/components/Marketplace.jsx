@@ -21,15 +21,12 @@ import {
 } from "../components/ui/dialog";
 import GradientBg from "../assets/GradientBg.png";
 import {
-  Leaf,
   Search,
   Filter,
   MapPin,
   Award,
   TrendingUp,
   ShoppingCart,
-  ArrowLeft,
-  Menu,
 } from "lucide-react";
 
 const Marketplace = () => {
@@ -269,7 +266,7 @@ const Marketplace = () => {
                         </span>
                       </div>
                       <Button
-                        className="w-full rounded bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg shadow-emerald-500/20 group-hover:shadow-emerald-500/40"
+                        className="w-full rounded bg-linear-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg shadow-emerald-500/20 group-hover:shadow-emerald-500/40"
                         onClick={() => handlePurchase(project)}
                       >
                         <ShoppingCart className="w-4 h-4 mr-2" />

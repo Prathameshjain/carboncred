@@ -10,17 +10,15 @@ import {
 import { Badge } from "../components/ui/badge";
 import { Input } from "../components/ui/input";
 import {
-  Leaf,
-  ArrowLeft,
   ShoppingCart,
   Calendar,
-  DollarSign,
   Search,
   Download,
   Filter,
   MapPin,
   Award,
   ExternalLink,
+  IndianRupeeIcon
 } from "lucide-react";
 import Sidebar from "./ui/Sidebar";
 import Navbar from "./ui/Navbar";
@@ -154,19 +152,19 @@ const filteredPurchases = purchases.filter(p =>
               <Card className="bg-slate-900 border-slate-800">
                 <CardContent className="pt-6 flex justify-between items-center">
                   <div>
-                    <p className="text-sm text-slate-400">Total Spent</p>
+                    <p className="flex items-start text-sm text-slate-400">Total Spent</p>
                     <p className="text-3xl font-bold text-primary">
-                      ${totalSpent.toLocaleString()}
+                      ₹ {totalSpent.toLocaleString()}
                     </p>
                   </div>
-                  <DollarSign className="w-8 h-8 text-primary" />
+                  <IndianRupeeIcon className="w-8 h-8 text-primary" />
                 </CardContent>
               </Card>
 
               <Card className="bg-slate-900 border-slate-800">
                 <CardContent className="pt-6 flex justify-between items-center">
                   <div>
-                    <p className="text-sm text-slate-400">
+                    <p className="flex items-start text-sm text-slate-400">
                       Total Credits
                     </p>
                     <p className="text-3xl font-bold text-success">
@@ -180,7 +178,7 @@ const filteredPurchases = purchases.filter(p =>
               <Card className="bg-slate-900 border-slate-800">
                 <CardContent className="pt-6 flex justify-between items-center">
                   <div>
-                    <p className="text-sm text-slate-400">
+                    <p className="flex items-start text-sm text-slate-400">
                       Transactions
                     </p>
                     <p className="text-3xl font-bold text-info">
