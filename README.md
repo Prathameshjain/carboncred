@@ -133,8 +133,6 @@ python manage.py runserver
 
 ---
 
----
-
 ## Environment Variables
 See `.env.example` for all required environment variables:
 - `POSTGRES_USER`
@@ -252,4 +250,5 @@ Key JavaScript dependencies (see `frontend/package.json`):
 
 ---
 For more details, see the project documentation and code comments.
+
 
