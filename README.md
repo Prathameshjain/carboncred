@@ -229,11 +229,6 @@ POSTGRES_PORT=5432
 
 ---
 
-## License
-MIT License © 2025 Prathameshjain
-
----
-
 ---
 
 ## Requirements
@@ -257,3 +252,4 @@ Key JavaScript dependencies (see `frontend/package.json`):
 
 ---
 For more details, see the project documentation and code comments.
+
