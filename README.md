@@ -133,8 +133,6 @@ python manage.py runserver
 
 ---
 
----
-
 ## Environment Variables
 See `.env.example` for all required environment variables:
 - `POSTGRES_USER`
@@ -229,11 +227,6 @@ POSTGRES_PORT=5432
 
 ---
 
-## License
-MIT License © 2025 Prathameshjain
-
----
-
 ---
 
 ## Requirements
@@ -257,3 +250,5 @@ Key JavaScript dependencies (see `frontend/package.json`):
 
 ---
 For more details, see the project documentation and code comments.
+
+
