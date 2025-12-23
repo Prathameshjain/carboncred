@@ -108,11 +108,6 @@ const Marketplace = () => {
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  // const handleBack = () => {
-  //   setToastMessage("Back navigation would return to dashboard");
-  //   setTimeout(() => setToastMessage(null), 2000);
-  // };
-
   const filteredProjects = projects.filter(
     (project) =>
       searchQuery === "" ||

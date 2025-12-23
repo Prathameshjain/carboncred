@@ -4,33 +4,21 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "./ui/Navbar";
 import Sidebar from "./ui/Sidebar";
 import {
-  Menu,
-  Bell,
-  User,
-  LogOut,
-  Settings,
   Home,
   Zap,
   ShoppingCart,
   Target,
   Wallet,
   Users,
-  MessageSquare,
   TrendingUp,
-  Leaf,
   Award,
   TreePine,
   Droplet,
   Wind,
-  ChevronDown,
-  ChevronRight,
   Lock,
   CheckCircle,
-  Plus,
+  FolderOpen,
   ArrowRight,
-  Heart,
-  Share2,
-  Search,
   PlusCircle
 } from "lucide-react";
 import {
@@ -148,11 +136,11 @@ const Dashboard = () => {
                 path: "/Mycredits",
               },
               {
-                icon: Wind,
-                label: "CO₂ Reduced",
-                value: "245 kg",
+                icon: FolderOpen,
+                label: "View Projects",
+                value: "8",
                 color: "from-teal-400 to-cyan-400",
-                path: "/co2reduced",
+                path: "/ViewProjects",
               },
               {
                 icon: Wallet,
@@ -174,12 +162,12 @@ const Dashboard = () => {
                 onClick={() => navigate(stat.path)}
                 className="group relative overflow-hidden rounded backdrop-blur-xl bg-linear-to-br from-white/60 to-white/40 border border-white/30 p-6 hover:border-white/50 transition-all shadow-lg hover:shadow-2xl cursor-pointer text-left"
               >
-                <div className="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-5 transition-opacity" />
-                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.color} shadow-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                <div className="absolute inset-0 bg-linear-to-br opacity-0 group-hover:opacity-5 transition-opacity" />
+                <div className={`w-12 h-12 rounded-xl bg-linear-to-br ${stat.color} shadow-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
                   <stat.icon size={24} className="text-white" />
                 </div>
                 <p className="text-sm font-medium text-slate-600 mb-1">{stat.label}</p>
-                <p className="text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">{stat.value}</p>
+                <p className="text-3xl font-bold bg-linear-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">{stat.value}</p>
               </button>
             ))}
           </div>
@@ -187,7 +175,7 @@ const Dashboard = () => {
           {/* Main Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Carbon Footprint Chart */}
-            <div className="lg:col-span-2 rounded-lg backdrop-blur-xl bg-gradient-to-br from-white/60 to-white/40 border border-white/30 p-8 shadow-lg hover:border-white/50 transition-all">
+            <div className="lg:col-span-2 rounded-lg backdrop-blur-xl bg-linear-to-br from-white/60 to-white/40 border border-white/30 p-8 shadow-lg hover:border-white/50 transition-all">
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h2 className="text-2xl font-bold text-slate-900 mb-1">

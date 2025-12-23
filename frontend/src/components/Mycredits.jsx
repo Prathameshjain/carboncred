@@ -3,6 +3,13 @@ import { useState } from "react";
 import Sidebar from "./ui/Sidebar";
 import Navbar from "./ui/Navbar";
 import Footer from "./ui/Footer";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "../components/ui/dialog";
 import GradientBg from "../assets/GradientBg.png";
 import {
   Award,
@@ -11,6 +18,7 @@ import {
   MapPin,
   Download,
   Eye,
+  ArrowUpRight,
 } from "lucide-react";
 import {
   Card,
@@ -24,8 +32,15 @@ import { Badge } from "./ui/badge";
 import { useNavigate } from "react-router-dom";
 
 function Mycredits() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const navigate = useNavigate();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
+  const [creditsForSale, setCreditsForSale] = useState("");
+  const [pricePerCredit, setPricePerCredit] = useState("");
+  const [error, setError] = useState("");
+  const userId = "USR_10231";
 
   const credits = [
     {
@@ -78,6 +93,63 @@ function Mycredits() {
   const totalValue = credits.reduce((sum, credit) => sum + credit.value, 0);
   const totalRetired = credits.reduce((sum, credit) => sum + credit.retired, 0);
   const activeCredits = totalCredits - totalRetired;
+
+  const showDetails = () => {
+    setOpenDialog(true);
+  };
+
+  const handleSellCredits = () => {
+    setError("");
+
+    if (!creditsForSale || creditsForSale <= 0) {
+      setError("Please enter a valid number of credits.");
+      return;
+    }
+
+    if (!pricePerCredit || pricePerCredit <= 0) {
+      setError("Please enter a valid price per credit.");
+      return;
+    }
+
+    if (creditsForSale > selectedProject.activeCredits) {
+      setError("You cannot sell more credits than you own.");
+      return;
+    }
+
+    const sellPayload = {
+      user_id: userId,
+      project_id: selectedProject.id,
+      credits: creditsForSale,
+      price_per_credit: pricePerCredit,
+    };
+
+    console.log("Sell Credits Payload:", sellPayload);
+
+    setOpenConfirmDialog(true);
+  };
+
+  const confirmSellCredits = () => {
+    const sellPayload = {
+      user_id: userId,
+      project_id: selectedProject.id,
+      credits: creditsForSale,
+      price_per_credit: pricePerCredit,
+    };
+
+    console.log("FINAL SELL PAYLOAD:", sellPayload);
+
+    // Later:
+    // 1. Send payload to backend
+    // 2. Create marketplace listing
+    // 3. Lock credits / escrow
+
+    // Reset everything
+    setOpenConfirmDialog(false);
+    setOpenDialog(false);
+    setCreditsForSale("");
+    setPricePerCredit("");
+    setSelectedProject(null);
+  };
 
   return (
     <div
@@ -174,10 +246,10 @@ function Mycredits() {
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle className="flex items-start ">
-                      Credit Holdings
+                      Projects Portfolio
                     </CardTitle>
                     <CardDescription>
-                      Your carbon credit portfolio breakdown
+                      Your Carbon credit breakdown
                     </CardDescription>
                   </div>
                   <Button
@@ -262,14 +334,33 @@ function Mycredits() {
                               </p>
                             </div>
 
-                            <div className="flex items-center">
+                            <div className="flex items-center gap-2">
                               <Button
-                                variant="outline"
                                 size="sm"
-                                className="gap-2 rounded bg-emerald-600 border-slate-700 text-white hover:bg-emerald-500 hover:text-slate-900"
+                                className="gap-2 rounded bg-linear-to-r bg-blue-100 border-slate-600 text-slate-800 hover:bg-slate-800 hover:text-white"
+                                onClick={() => showDetails()}
                               >
                                 <Eye className="w-4 h-4" />
                                 Details
+                              </Button>
+                              <Button
+                                size="sm"
+                                className="gap-2 rounded bg-linear-to-r from-red-500 to bg-red-900 text-white hover:bg-red-700 shadow-md shadow-red-500/20"
+                                onClick={() => {
+                                  setSelectedProject({
+                                    id: credit.id,
+                                    name: credit.projectName,
+                                    activeCredits:
+                                      credit.amount - credit.retired,
+                                  });
+                                  setCreditsForSale("");
+                                  setPricePerCredit("");
+                                  setError("");
+                                  setOpenDialog(true);
+                                }}
+                              >
+                                <ArrowUpRight className="w-4 h-4" />
+                                Sell Credits
                               </Button>
                             </div>
                           </div>
@@ -281,7 +372,160 @@ function Mycredits() {
               </CardContent>
             </Card>
           </div>
-          {/* Footer */}
+
+          <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+            <DialogContent className="bg-white/60 backdrop-blur-xl border border-white/30 shadow-2xl max-w-md">
+              <DialogHeader>
+                <DialogTitle className="text-xl text-slate-900 font-bold">
+                  Sell Carbon Credits
+                </DialogTitle>
+                <DialogDescription className="text-slate-600">
+                  List your credits on the marketplace for sale.
+                </DialogDescription>
+              </DialogHeader>
+
+              {selectedProject && (
+                <div className="space-y-4 mt-4">
+                  {/* User ID */}
+                  <div className="flex justify-between">
+                    <span className="text-slate-700">User ID</span>
+                    <span className="font-semibold text-slate-900">
+                      {userId}
+                    </span>
+                  </div>
+
+                  {/* Project */}
+                  <div className="flex justify-between">
+                    <span className="text-slate-700">Project</span>
+                    <span className="font-semibold text-slate-900">
+                      {selectedProject.name}
+                    </span>
+                  </div>
+
+                  {/* Available Credits */}
+                  <div className="flex justify-between">
+                    <span className="text-slate-700">Available Credits</span>
+                    <span className="font-semibold text-slate-900">
+                      {selectedProject.activeCredits.toLocaleString()}
+                    </span>
+                  </div>
+
+                  {/* Credits for Sale */}
+                  <div className="flex flex-col gap-1">
+                    <label className="text-slate-700 font-medium">
+                      Credits for Sale
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max={selectedProject.activeCredits}
+                      value={creditsForSale}
+                      onChange={(e) =>
+                        setCreditsForSale(Number(e.target.value))
+                      }
+                      className="bg-white border border-gray-300 rounded px-3 py-2 text-slate-900 focus:ring-2 focus:ring-red-400 outline-none"
+                      placeholder="Enter credits to sell"
+                    />
+                  </div>
+
+                  {/* Price per Credit */}
+                  <div className="flex flex-col gap-1">
+                    <label className="text-slate-700 font-medium">
+                      Price per Credit ($)
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={pricePerCredit}
+                      onChange={(e) =>
+                        setPricePerCredit(Number(e.target.value))
+                      }
+                      className="bg-white border border-gray-300 rounded px-3 py-2 text-slate-900 focus:ring-2 focus:ring-red-400 outline-none"
+                      placeholder="Set price"
+                    />
+                  </div>
+
+                  {/* Error */}
+                  {error && (
+                    <p className="text-sm text-red-600">{error}</p>
+                  )}
+
+                  {/* Sell Button */}
+                  <Button
+                    className="w-full rounded bg-linear-to-r from-red-500 to bg-red-900 text-white hover:bg-red-700 shadow-md shadow-red-500/20"
+                    onClick={handleSellCredits}
+                  >
+                    Sell Credits
+                  </Button>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={openConfirmDialog} onOpenChange={setOpenConfirmDialog}>
+            <DialogContent className="bg-white border border-slate-200 shadow-xl max-w-sm">
+              <DialogHeader>
+                <DialogTitle className="text-lg font-bold text-slate-900">
+                  Confirm Sale
+                </DialogTitle>
+                <DialogDescription className="text-slate-600">
+                  Please review the details before listing your credits.
+                </DialogDescription>
+              </DialogHeader>
+
+              {selectedProject && (
+                <div className="space-y-3 mt-4 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">Project</span>
+                    <span className="font-medium text-slate-900">
+                      {selectedProject.name}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">Credits for Sale</span>
+                    <span className="font-medium text-slate-900">
+                      {creditsForSale}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">Price per Credit</span>
+                    <span className="font-medium text-slate-900">
+                      ${pricePerCredit}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between border-t pt-2 mt-2">
+                    <span className="text-slate-700 font-semibold">
+                      Total Value
+                    </span>
+                    <span className="font-bold text-slate-900">
+                      ${(creditsForSale * pricePerCredit).toLocaleString()}
+                    </span>
+                  </div>
+
+                  <div className="flex-col mt-4">
+                    <Button
+                      variant="outline"
+                      className="w-full m-1 text-slate-900 bg-slate-300 hover:bg-slate-400 "
+                      onClick={() => setOpenConfirmDialog(false)}
+                    >
+                      Cancel
+                    </Button>
+
+                    <Button
+                      className="w-full m-1 bg-linear-to-r from-red-500 to bg-red-900 text-white hover:bg-red-700 shadow-md shadow-red-500/20"
+                      onClick={confirmSellCredits}
+                    >
+                      Confirm Sell
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
+
           <Footer />
         </div>
       </div>

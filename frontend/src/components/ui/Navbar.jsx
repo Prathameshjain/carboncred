@@ -2,6 +2,8 @@ import React from "react";
 import GradientBg from '../../assets/GradientBg.png';
 import { Menu, Bell, User, ChevronDown, Settings, LogOut, Search,Leaf } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
+
 
 const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -17,14 +19,16 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
             >
               <Menu size={24} className="text-slate-700" />
             </button>
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-xl bg-linear-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg">
-                <Leaf size={24} className="text-white" />
+            <Link to="/" className="flex items-center gap-2 cursor-pointer no-underline!">
+              <div className="flex items-center gap-2 ">
+                <div className="w-10 h-10 rounded-xl bg-linear-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg">
+                  <Leaf size={24} className="text-white" />
+                </div>
+                <span className="text-2xl font-bold text-black bg-clip-text">
+                  Carbon<span className="text-green-600">Cred</span>
+                </span>
               </div>
-              <span className="text-2xl font-bold text-black bg-clip-text">
-                Carbon<span className="text-green-600">Cred</span>
-              </span>
-            </div>
+            </Link>
           </div>
 
           <div className="hidden md:flex items-center gap-2 flex-1 max-w-xs mx-8">

@@ -4,9 +4,8 @@ import { useNavigate } from "react-router-dom";
 import backgroundImage from "../assets/homeBG.jpg";
 import contextImg from "../assets/contextImg.png";
 import GradientBg from '../assets/GradientBg.png';
-
-
 import { Home, Leaf, Zap, Users, CheckCircle, Box, DollarSign } from 'lucide-react';
+
 export default function CarbonCredHomepage() {
   const navigate = useNavigate();
   return (
@@ -18,12 +17,13 @@ export default function CarbonCredHomepage() {
           <div className="p-2 backdrop-blur-lg rounded-2xl border border-white/20">
             <div className="max-w-7xl mx-auto flex justify-between items-center">
               <div className="flex items-center space-x-2">
-                <Leaf className="w-8 h-8 text-green-600" />
+                <div className="w-10 h-10 rounded-xl bg-linear-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg">
+                  <Leaf size={24} className="text-white" />
+                </div>
                 <span className="text-2xl font-bold">
                   Carbon<span className="text-green-600">Cred</span>
                 </span>
               </div>
-
               <div className="flex space-x-8">
                 <button 
                   onClick={()=>navigate("/Login")}
@@ -64,7 +64,6 @@ export default function CarbonCredHomepage() {
           </div>
         </section>
   
-
         {/* Context Section */}
         <section className="py-20">
           <div className="max-w-7xl mx-auto px-8">

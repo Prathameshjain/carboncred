@@ -151,6 +151,18 @@ const AddProject = () => {
               <p className="text-sm font-medium">{toastMessage}</p>
             </div>
           )}
+          {/* Page Header */}
+          <div className="bg-white border-b border-slate-200">
+            <div className="max-w-7xl mx-auto px-6 py-3 text-left">
+              <h2 className="text-4xl text-slate-900 tracking-tight">
+                Add New Project
+              </h2>
+              <p className="mt-3 text-base text-slate-600">
+                Create a new carbon credit project for verification and marketplace listing
+              </p>
+            </div>
+          </div>
+
           <main className="px-6 py-4 max-w-7xl mx-auto space-y-8">
             <div className="space-y-6">
               {/* ========== SECTION A: BASIC PROJECT INFORMATION ========== */}

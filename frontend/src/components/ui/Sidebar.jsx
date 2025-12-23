@@ -9,7 +9,7 @@ const Sidebar = ({ sidebarOpen }) => {
 
   const menuItems = [
     { icon: Home, label: "Dashboard", path: "/Dashboard" },
-    { icon: Zap, label: "Credits", path: "/Mycredits" },
+    { icon: Zap, label: "Projects", path: "/Mycredits" },
     { icon: ShoppingCart, label: "Marketplace", path: "/Marketplace" },
     { icon: Wallet, label: "History", path: "/PurchaseHistory" },
   ];
