@@ -1,0 +1,24 @@
+{
+  "report_id": "RPT-20251213_195331",
+  "generated_at": "2025-12-13T19:53:31.055158",
+  "verification_result": {
+    "project_name": "Rajasthan Solar Farm",
+    "project_type": "solar",
+    "final_decision": "VERIFIED",
+    "confidence_score": 0.85,
+    "claim_alignment": "LOW",
+    "key_metrics": {
+      "solar_probability": 0.85,
+      "estimated_panel_area_m2": 85000.0,
+      "estimated_energy_mwh_year": 25130.25,
+      "avoided_co2_tco2_year": 17591.17,
+      "land_use_conflict": false,
+      "claim_gap_pct": -17571.17,
+      "area_hectares": 10.0
+    },
+    "explanation": "\u2713 PROJECT VERIFIED\n\nThe solar installation project has been verified based on imagery analysis.\n\nANALYSIS SUMMARY:\n\u2022 Solar panel detection confidence: 85.0%\n\u2022 Estimated panel area: 85000.00 m\u00b2\n\u2022 Land use conflict detected: No\n\nENVIRONMENTAL IMPACT:\n\u2022 Estimated annual energy generation: 25130.25 MWh\n\u2022 Estimated CO\u2082 emissions avoided: 17591.17 tCO\u2082/year\n\nCLAIM VERIFICATION:\n\u2022 User claim is conservative by 17571.2%\n\nDECISION RATIONALE:\n\u2022 All verification criteria met",
+    "decision_reasons": [
+      "All verification criteria met"
+    ]
+  }
+}

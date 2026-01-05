@@ -1,0 +1,24 @@
+{
+  "report_id": "RPT-20251213_195339",
+  "generated_at": "2025-12-13T19:53:39.547645",
+  "verification_result": {
+    "project_name": "Industrial Rooftop Solar",
+    "project_type": "solar",
+    "final_decision": "REJECTED",
+    "confidence_score": 0.35,
+    "claim_alignment": "LOW",
+    "key_metrics": {
+      "solar_probability": 0.35,
+      "estimated_panel_area_m2": 7000.0,
+      "estimated_energy_mwh_year": 2069.55,
+      "avoided_co2_tco2_year": 1448.68,
+      "land_use_conflict": false,
+      "claim_gap_pct": -7228.42,
+      "area_hectares": 2.0
+    },
+    "explanation": "\u2717 PROJECT REJECTED\n\nThe project does not meet minimum verification standards:\n\nANALYSIS SUMMARY:\n\u2022 Solar panel detection confidence: 35.0%\n\u2022 Estimated panel area: 7000.00 m\u00b2\n\u2022 Land use conflict detected: No\n\nENVIRONMENTAL IMPACT:\n\u2022 Estimated annual energy generation: 2069.55 MWh\n\u2022 Estimated CO\u2082 emissions avoided: 1448.68 tCO\u2082/year\n\nCLAIM VERIFICATION:\n\u2022 User claim is conservative by 7228.4%\n\nDECISION RATIONALE:\n\u2022 Solar probability (0.3500) below threshold (0.4)",
+    "decision_reasons": [
+      "Solar probability (0.3500) below threshold (0.4)"
+    ]
+  }
+}

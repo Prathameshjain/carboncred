@@ -1,4 +1,6 @@
 from django.db import transaction
+from django.db.models import Sum, Q
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -15,6 +17,7 @@ from .serializers import (
 
 from credits.models import CreditWallet
 from transactions.models import Transaction
+from projects.models import Project
 
 
 # 1️⃣ CREATE SELL ORDER
@@ -27,11 +30,61 @@ class CreateSellOrderView(APIView):
         serializer = CreateSellOrderSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
+        project_id = serializer.validated_data['project_id']
+        credits_to_sell = serializer.validated_data['credits_for_sale']
+        price_per_credit = serializer.validated_data['price_per_credit']
+
+        try:
+            project = Project.objects.get(id=project_id)
+        except Project.DoesNotExist:
+            return Response(
+                {'error': 'Project not found'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # ✅ NEW: ownership check
+        if project.user != request.user:
+            return Response(
+                {'error': 'You do not own this project'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # 🔥 FIX: allow ISSUED credits with NULL project (old data)
+        wallets = CreditWallet.objects.select_for_update().filter(
+            user=request.user,
+            credit_type='ISSUED'
+        ).filter(
+            Q(project=project) | Q(project__isnull=True)
+        )
+
+        if not wallets.exists():
+            return Response(
+                {'error': 'No issued credits found for this project'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        total_available = wallets.aggregate(
+            total=Sum('available_credits')
+        )['total'] or 0
+
+        if total_available < credits_to_sell:
+            return Response(
+                {'error': 'Not enough available credits to create sell order'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # ✅ Deduct credits + fix old NULL project
+        wallet = wallets.first()
+        wallet.available_credits -= credits_to_sell
+        wallet.used_credits += credits_to_sell
+        wallet.project = project
+        wallet.save()
+
         sell_order = SellOrder.objects.create(
             seller=request.user,
-            project_id=serializer.validated_data['project_id'],
-            credits_for_sale=serializer.validated_data['credits_for_sale'],
-            price_per_credit=serializer.validated_data['price_per_credit'],
+            project=project,
+            credits_for_sale=credits_to_sell,
+            price_per_credit=price_per_credit,
             status='ACTIVE'
         )
 
@@ -79,7 +132,6 @@ class BuyFromSellOrderView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # 🚫 Seller cannot buy own order
         if sell_order.seller == buyer:
             return Response(
                 {'error': 'You cannot buy your own sell order'},
@@ -88,17 +140,15 @@ class BuyFromSellOrderView(APIView):
 
         if sell_order.credits_for_sale < credits_to_buy:
             return Response(
-                {'error': 'Not enough credits available'},
+                {'error': 'Not enough credits available in sell order'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # 1️⃣ Reduce sell order credits
         sell_order.credits_for_sale -= credits_to_buy
         if sell_order.credits_for_sale == 0:
             sell_order.status = 'SOLD'
         sell_order.save()
 
-        # 2️⃣ Add credits to buyer wallet
         CreditWallet.objects.create(
             user=buyer,
             project=sell_order.project,
@@ -107,7 +157,6 @@ class BuyFromSellOrderView(APIView):
             used_credits=0
         )
 
-        # 3️⃣ Create transaction record
         Transaction.objects.create(
             sell_order=sell_order,
             project=sell_order.project,
@@ -122,7 +171,7 @@ class BuyFromSellOrderView(APIView):
         )
 
 
-# 4️⃣ CANCEL SELL ORDER (RETURN UNUSED CREDITS)
+# 4️⃣ CANCEL SELL ORDER
 class CancelSellOrderView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -142,16 +191,16 @@ class CancelSellOrderView(APIView):
 
         remaining_credits = sell_order.credits_for_sale
 
-        # 🔁 Return credits to wallet
-        wallet = CreditWallet.objects.select_for_update().get(
+        wallet = CreditWallet.objects.select_for_update().filter(
             user=request.user,
             project=sell_order.project,
             credit_type='ISSUED'
-        )
+        ).first()
 
-        wallet.available_credits += remaining_credits
-        wallet.used_credits -= remaining_credits
-        wallet.save()
+        if wallet:
+            wallet.available_credits += remaining_credits
+            wallet.used_credits -= remaining_credits
+            wallet.save()
 
         sell_order.status = 'CANCELLED'
         sell_order.save()

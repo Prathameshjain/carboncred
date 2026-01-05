@@ -1,0 +1,29 @@
+{
+  "report_id": "RPT-20251213_195303",
+  "generated_at": "2025-12-13T19:53:03.231638",
+  "verification_result": {
+    "project_name": "Green Valley Reforestation",
+    "project_type": "vegetation",
+    "final_decision": "VERIFIED",
+    "confidence_score": 0.7844,
+    "claim_alignment": "HIGH",
+    "key_metrics": {
+      "vegetation_score": 0.7844,
+      "mean_iou": 0.7279,
+      "mean_dice": 0.8305,
+      "temporal_consistency": 0.9851,
+      "vegetation_coverage_pct": 75.0,
+      "vegetation_growth_pct": 10.0,
+      "ndvi_change": 0.1,
+      "soil_health_index": 0.8,
+      "estimated_carbon_sequestration_tco2_year": 187.5,
+      "aqi_improvement_proxy": 0.6,
+      "claim_gap_pct": 5.0,
+      "area_hectares": 50.0
+    },
+    "explanation": "\u2713 PROJECT VERIFIED\n\nThe vegetation project has been verified based on satellite imagery analysis.\n\nANALYSIS SUMMARY:\n\u2022 Vegetation detection accuracy (IoU): 72.8%\n\u2022 Segmentation quality (Dice): 83.0%\n\u2022 Temporal consistency: 98.5%\n\u2022 Current vegetation coverage: 75.0%\n\u2022 Measured vegetation growth: 10.0%\n\nENVIRONMENTAL IMPACT:\n\u2022 Estimated carbon sequestration: 187.50 tCO\u2082/year\n\nCLAIM VERIFICATION:\n\u2022 User claim aligns well with measured data (gap: 5.0%)\n\nDECISION RATIONALE:\n\u2022 All verification criteria met",
+    "decision_reasons": [
+      "All verification criteria met"
+    ]
+  }
+}

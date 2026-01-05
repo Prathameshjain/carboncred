@@ -1,0 +1,8 @@
+Django>=3.2
+# Django version can be adjusted as per your project, 3.2 is LTS and common for many projects
+djangorestframework
+django-environ
+djangorestframework-simplejwt
+django-cors-headers
+psycopg2
+drf-yasg

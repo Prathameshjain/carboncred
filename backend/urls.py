@@ -29,6 +29,7 @@ urlpatterns = [
     path('api/credits/', include('credits.urls')),
     path('api/marketplace/', include('marketplace.urls')),
     path('api/transactions/', include('transactions.urls')),
+    path('api/projects/', include('projects.urls')),
     
 
     # API Docs
