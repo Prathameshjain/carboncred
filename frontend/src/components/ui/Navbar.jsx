@@ -62,9 +62,6 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
                   <button className="w-full px-4 py-3 text-left hover:bg-white/40 transition-colors flex items-center gap-2 text-sm">
                     <User size={16} /> Profile
                   </button>
-                  <button className="w-full px-4 py-3 text-left hover:bg-white/40 transition-colors flex items-center gap-2 text-sm border-t border-white/10">
-                    <Settings size={16} /> Settings
-                  </button>
                   <button className="w-full px-4 py-3 text-left hover:bg-white/40 transition-colors flex items-center gap-2 text-sm border-t border-white/10 text-red-600">
                     <LogOut size={16} /> Signout
                   </button>

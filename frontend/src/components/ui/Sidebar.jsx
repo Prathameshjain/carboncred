@@ -59,7 +59,7 @@ const Sidebar = ({ sidebarOpen }) => {
         </div>
 
         {/* QUICK ACCESS */}
-        <div className="border-t border-white/20 pt-4">
+        {/* <div className="border-t border-white/20 pt-4">
           {sidebarOpen && (
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-4">
               Quick Access
@@ -81,7 +81,7 @@ const Sidebar = ({ sidebarOpen }) => {
               </span>
             )}
           </button>
-        </div>
+        </div> */}
       </div>
     </div>
   );
