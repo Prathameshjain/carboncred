@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+from django.db import transaction
 from .models import Project, ProjectImage
 from .serializers import (
     ProjectSerializer,
@@ -12,6 +13,86 @@ from .serializers import (
     ProjectListSerializer
 )
 from .verification_service import verification_service
+from credits.models import CreditWallet
+
+
+def calculate_credits_from_project(project):
+    """
+    Calculate the number of carbon credits to issue based on project verification data.
+    
+    Credit calculation logic:
+    - For VEGETATION: Based on estimated_co2_tco2_year (1 credit = 1 tCO2)
+    - For SOLAR: Based on avoided_co2_tco2_year (1 credit = 1 tCO2)
+    
+    Returns:
+        int: Number of credits to issue (0 if not verified)
+    """
+    if project.final_decision != 'VERIFIED':
+        return 0
+    
+    classification = project.classification.upper()
+    
+    if classification in ['VEGETATION', 'PLANTATION']:
+        # Vegetation projects: credits based on carbon sequestration
+        co2_value = project.estimated_co2_tco2_year or 0
+        credits = int(co2_value)  # 1 credit per tCO2/year
+    elif classification == 'SOLAR':
+        # Solar projects: credits based on avoided CO2
+        co2_value = project.avoided_co2_tco2_year or project.estimated_co2_tco2_year or 0
+        credits = int(co2_value)  # 1 credit per tCO2/year
+    elif classification == 'METHANE':
+        # Methane projects: credits based on CO2 equivalent
+        co2_value = project.estimated_co2_tco2_year or 0
+        credits = int(co2_value)
+    else:
+        credits = 0
+    
+    return max(0, credits)  # Ensure non-negative
+
+
+def issue_credits_to_wallet(user, project, credits_amount):
+    """
+    Issue credits to user's wallet for a verified project.
+    
+    Creates a CreditWallet entry with type='ISSUED' linked to the project.
+    Updates the project's credits_issued field.
+    
+    Args:
+        user: Django User instance
+        project: Project instance
+        credits_amount: Number of credits to issue
+    
+    Returns:
+        CreditWallet instance or None if no credits to issue
+    """
+    if credits_amount <= 0:
+        return None
+    
+    # Check if credits already issued for this project
+    existing_wallet = CreditWallet.objects.filter(
+        user=user,
+        project=project,
+        credit_type='ISSUED'
+    ).first()
+    
+    if existing_wallet:
+        # Credits already issued for this project
+        return existing_wallet
+    
+    # Create new wallet entry for issued credits
+    wallet = CreditWallet.objects.create(
+        user=user,
+        project=project,
+        credit_type='ISSUED',
+        available_credits=credits_amount,
+        used_credits=0
+    )
+    
+    # Update project's credits_issued field
+    project.credits_issued = credits_amount
+    project.save(update_fields=['credits_issued'])
+    
+    return wallet
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
@@ -43,6 +124,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             return ProjectDetailSerializer
         return ProjectSerializer
 
+    @transaction.atomic
     def create(self, request, *args, **kwargs):
         """
         Create a new project with images and automatically trigger ML verification.
@@ -61,6 +143,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             - after_image_date: date YYYY-MM-DD (optional)
         
         Response includes full verification result with all ML metrics.
+        If verified, credits are automatically issued to user's wallet.
         """
         # Validate input data
         serializer = self.get_serializer(data=request.data)
@@ -132,11 +215,18 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 captured_date=img_data['date']
             )
         
+        # Issue credits to wallet if project is VERIFIED
+        if project.final_decision == 'VERIFIED':
+            credits_amount = calculate_credits_from_project(project)
+            if credits_amount > 0:
+                issue_credits_to_wallet(request.user, project, credits_amount)
+        
         # Return full project details
         response_serializer = ProjectDetailSerializer(project)
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
     
     @action(detail=True, methods=['post'])
+    @transaction.atomic
     def reverify(self, request, pk=None):
         """
         Re-run ML verification on an existing project.
@@ -147,6 +237,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
         - New images have been uploaded
         - Verification algorithm has been updated
         - Manual review requested re-verification
+        
+        If verification changes to VERIFIED, credits are issued to wallet.
         """
         project = self.get_object()
         
@@ -184,6 +276,12 @@ class ProjectViewSet(viewsets.ModelViewSet):
             for field, value in verification_fields.items():
                 setattr(project, field, value)
             project.save()
+            
+            # Issue credits to wallet if project is now VERIFIED
+            if project.final_decision == 'VERIFIED':
+                credits_amount = calculate_credits_from_project(project)
+                if credits_amount > 0:
+                    issue_credits_to_wallet(request.user, project, credits_amount)
             
             serializer = ProjectDetailSerializer(project)
             return Response({
