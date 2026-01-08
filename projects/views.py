@@ -1,297 +1,211 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from .models import Project, ProjectImage
-from .serializers import ProjectSerializer, ProjectImageSerializer
+from .serializers import (
+    ProjectSerializer,
+    ProjectImageSerializer,
+    ProjectCreateSerializer,
+    ProjectDetailSerializer,
+    ProjectListSerializer
+)
+from .verification_service import verification_service
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
-    serializer_class = ProjectSerializer
+    """
+    ViewSet for managing projects with ML verification integration.
+    
+    Endpoints:
+        GET /projects/ - List all projects for the user
+        POST /projects/ - Create a new project with images (triggers ML verification)
+        GET /projects/{id}/ - Get project details
+        PUT /projects/{id}/ - Update project (not verification fields)
+        DELETE /projects/{id}/ - Delete project
+        POST /projects/{id}/reverify/ - Re-run verification
+    """
     permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_queryset(self):
-        # only return projects of logged-in user
+        """Only return projects of logged-in user."""
         return Project.objects.filter(user=self.request.user)
+    
+    def get_serializer_class(self):
+        """Return appropriate serializer based on action."""
+        if self.action == 'create':
+            return ProjectCreateSerializer
+        elif self.action == 'list':
+            return ProjectListSerializer
+        elif self.action in ['retrieve', 'reverify']:
+            return ProjectDetailSerializer
+        return ProjectSerializer
 
-    def perform_create(self, serializer):
-        # force project owner as logged-in user
-        serializer.save(user=self.request.user)
+    def create(self, request, *args, **kwargs):
+        """
+        Create a new project with images and automatically trigger ML verification.
+        
+        Request (multipart/form-data):
+            - project_name: string (required)
+            - classification: SOLAR | VEGETATION | PLANTATION | METHANE (required)
+            - project_area_hectares: decimal (required)
+            - project_cost_lakh_inr: decimal (required)
+            - claimed_improvement_pct: decimal (required)
+            - project_latitude: decimal (optional)
+            - project_longitude: decimal (optional)
+            - before_image: file (required - at least one image)
+            - after_image: file (optional)
+            - before_image_date: date YYYY-MM-DD (optional)
+            - after_image_date: date YYYY-MM-DD (optional)
+        
+        Response includes full verification result with all ML metrics.
+        """
+        # Validate input data
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        validated_data = serializer.validated_data
+        
+        # Extract image data (not part of Project model)
+        before_image = validated_data.pop('before_image', None)
+        after_image = validated_data.pop('after_image', None)
+        before_image_date = validated_data.pop('before_image_date', None)
+        after_image_date = validated_data.pop('after_image_date', None)
+        
+        # Collect image files for verification
+        image_files = []
+        if before_image:
+            image_files.append({
+                'file': before_image,
+                'type': 'BEFORE',
+                'date': before_image_date
+            })
+        if after_image:
+            image_files.append({
+                'file': after_image,
+                'type': 'AFTER',
+                'date': after_image_date
+            })
+        
+        # Run ML verification with images
+        try:
+            verification_response = verification_service.verify_project(
+                project_name=validated_data['project_name'],
+                classification=validated_data['classification'],
+                project_area_hectares=float(validated_data['project_area_hectares']),
+                project_cost_lakh_inr=float(validated_data['project_cost_lakh_inr']),
+                claimed_improvement_pct=float(validated_data['claimed_improvement_pct']),
+                project_latitude=float(validated_data.get('project_latitude')) if validated_data.get('project_latitude') else None,
+                project_longitude=float(validated_data.get('project_longitude')) if validated_data.get('project_longitude') else None,
+                image_files=image_files,
+            )
+            
+            # Map verification result to model fields
+            verification_fields = verification_service.map_result_to_model_fields(
+                verification_response,
+                validated_data['classification']
+            )
+            
+        except Exception as e:
+            # If verification fails, still create project with PENDING status
+            verification_fields = {
+                'final_decision': 'PENDING',
+                'explanation': f'Verification failed: {str(e)}',
+                'decision_reasons': [f'Error: {str(e)}'],
+            }
+        
+        # Create the project with user input + verification results
+        project = Project.objects.create(
+            user=request.user,
+            **validated_data,
+            **verification_fields
+        )
+        
+        # Save uploaded images to ProjectImage model
+        for img_data in image_files:
+            ProjectImage.objects.create(
+                project=project,
+                image_file=img_data['file'],
+                image_type=img_data['type'],
+                captured_date=img_data['date']
+            )
+        
+        # Return full project details
+        response_serializer = ProjectDetailSerializer(project)
+        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+    
+    @action(detail=True, methods=['post'])
+    def reverify(self, request, pk=None):
+        """
+        Re-run ML verification on an existing project.
+        
+        Uses the images already uploaded for this project.
+        
+        Useful when:
+        - New images have been uploaded
+        - Verification algorithm has been updated
+        - Manual review requested re-verification
+        """
+        project = self.get_object()
+        
+        # Get existing images for this project
+        project_images = project.images.all()
+        image_files = []
+        for img in project_images:
+            if img.image_file:
+                image_files.append({
+                    'file': img.image_file,
+                    'type': img.image_type,
+                    'date': img.captured_date
+                })
+        
+        try:
+            # Run verification with current project data and images
+            verification_response = verification_service.verify_project(
+                project_name=project.project_name,
+                classification=project.classification,
+                project_area_hectares=float(project.project_area_hectares),
+                project_cost_lakh_inr=float(project.project_cost_lakh_inr),
+                claimed_improvement_pct=float(project.claimed_improvement_pct),
+                project_latitude=float(project.project_latitude) if project.project_latitude else None,
+                project_longitude=float(project.project_longitude) if project.project_longitude else None,
+                image_files=image_files,
+            )
+            
+            # Map results to model fields
+            verification_fields = verification_service.map_result_to_model_fields(
+                verification_response,
+                project.classification
+            )
+            
+            # Update project with new verification results
+            for field, value in verification_fields.items():
+                setattr(project, field, value)
+            project.save()
+            
+            serializer = ProjectDetailSerializer(project)
+            return Response({
+                'message': 'Project re-verified successfully',
+                'project': serializer.data
+            })
+            
+        except Exception as e:
+            return Response(
+                {'error': f'Verification failed: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class ProjectImageViewSet(viewsets.ModelViewSet):
+    """ViewSet for managing project images."""
+    
     serializer_class = ProjectImageSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        # only images of user's projects
+        """Only return images of user's projects."""
         return ProjectImage.objects.filter(
             project__user=self.request.user
         )
-
-
-
-"""
------------------------------------------------------------------------------------------------
-
-
-
-from rest_framework import serializers
-from rest_framework.permissions import IsAuthenticated
-from drf_yasg.utils import swagger_auto_schema
-from rest_framework.views import APIView
-from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework.response import Response
-from rest_framework import status
-import datetime
-import random
-
-# Minimal serializer for evidence upload
-class EvidenceUploadSerializer(serializers.Serializer):
-	file = serializers.FileField()
-	type = serializers.ChoiceField(choices=["satellite", "drone", "document"])
-
-# Minimal mock IPFS upload function
-def mock_ipfs_upload(file):
-	# In real use, upload to IPFS and return the hash
-	return f"Qm{random.randint(10000,99999)}abc"
-
-# Evidence upload API view
-class ProjectEvidenceUploadAPIView(APIView):
-	parser_classes = [MultiPartParser, FormParser]
-	permission_classes = [IsAuthenticated]
-
-	@swagger_auto_schema(operation_id="projects_upload_evidence", request_body=EvidenceUploadSerializer, responses={200: "Evidence uploaded"})
-	def post(self, request, id):
-		serializer = EvidenceUploadSerializer(data=request.data)
-		if serializer.is_valid():
-			uploaded_file = serializer.validated_data["file"]
-			print(f"[UPLOAD] Project ID: {id}, File name: {uploaded_file.name}, Size: {uploaded_file.size} bytes, Content type: {uploaded_file.content_type}")
-			# Mock IPFS upload
-			ipfs_hash = mock_ipfs_upload(uploaded_file)
-			file_url = f"ipfs://{ipfs_hash}"
-			uploaded_at = datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
-			return Response({
-				"projectId": f"proj_{id}",
-				"fileUrl": file_url,
-				"uploadedAt": uploaded_at
-			}, status=status.HTTP_200_OK)
-		return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-from rest_framework.generics import UpdateAPIView
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.exceptions import PermissionDenied
-from rest_framework import serializers
-from django.utils import timezone
-from .models import Project
-from drf_yasg.utils import swagger_auto_schema
-
-class ProjectUpdateSerializer(serializers.ModelSerializer):
-	updatedAt = serializers.DateTimeField(read_only=True)
-
-	class Meta:
-		model = Project
-		fields = ["id", "budget", "plannedCredits", "updatedAt"]
-		read_only_fields = ["id", "updatedAt"]
-
-class ProjectUpdateAPIView(UpdateAPIView):
-	@swagger_auto_schema(operation_id="projects_update_Full")
-	def put(self, request, *args, **kwargs):
-		return super().put(request, *args, **kwargs)
-
-	@swagger_auto_schema(operation_id="projects_update_Selective")
-	def patch(self, request, *args, **kwargs):
-		return super().patch(request, *args, **kwargs)
-
-	def get_view_name(self):
-		if self.request and self.request.method == "PUT":
-			return "projects_update_Full"
-		elif self.request and self.request.method == "PATCH":
-			return "projects_update_Selective"
-		return super().get_view_name()
-
-	queryset = Project.objects.all()
-	serializer_class = ProjectUpdateSerializer
-	lookup_field = "id"
-	permission_classes = [IsAuthenticated]
-
-	def get_object(self):
-		obj = super().get_object()
-		user = self.request.user
-		# Only issuer who owns the project can update
-		if not hasattr(user, "profile") or user.profile.role != "issuer" or obj.issuer != user:
-			raise PermissionDenied("Only the issuer who created this project can update it.")
-		# Only if not verified/approved
-		if obj.status == "approved":
-			raise PermissionDenied("Cannot update a verified/approved project.")
-		return obj
-
-	def perform_update(self, serializer):
-		serializer.save(updatedAt=timezone.now())
-
-from rest_framework import generics, status, permissions
-from rest_framework.response import Response
-from rest_framework.exceptions import PermissionDenied
-from .models import Project
-from django.contrib.auth.models import User
-from accounts.models import Profile
-
-
-
-class ProjectDetailSerializer(serializers.ModelSerializer):
-	impactScore = serializers.SerializerMethodField()
-	evidenceFiles = serializers.SerializerMethodField()
-
-	class Meta:
-		model = Project
-		fields = [
-			"id", "title", "type", "location", "budget", "plannedCredits",
-			"status", "impactScore", "evidenceFiles", "createdAt"
-		]
-
-	def get_impactScore(self, obj):
-		# Placeholder: implement actual impact score logic if available
-		return getattr(obj, "impactScore", None)
-
-	def get_evidenceFiles(self, obj):
-		# Placeholder: return a list of IPFS hashes if available
-		return getattr(obj, "evidenceFiles", [])
-
-class ProjectListSerializer(serializers.ModelSerializer):
-	impactScore = serializers.SerializerMethodField()
-	location = serializers.SerializerMethodField()
-
-	class Meta:
-		model = Project
-		fields = ["id", "title", "type", "location", "status", "impactScore"]
-
-	def get_impactScore(self, obj):
-		return getattr(obj, "impactScore", None)
-
-	def get_location(self, obj):
-		loc = obj.location
-		if isinstance(loc, dict):
-			if "region" in loc:
-				return loc["region"]
-			if "latitude" in loc and "longitude" in loc:
-				return f"Lat: {loc['latitude']}, Lon: {loc['longitude']}"
-		return str(loc)
-from rest_framework.generics import RetrieveAPIView
-
-class ProjectDetailAPIView(RetrieveAPIView):
-	@swagger_auto_schema(operation_id="projects_byid_read")
-	def get(self, request, *args, **kwargs):
-		return super().get(request, *args, **kwargs)
-
-	def get_view_name(self):
-		return "projects_byid_read"
-
-	queryset = Project.objects.all()
-	serializer_class = ProjectDetailSerializer
-	lookup_field = "id"
-
-class ProjectSerializer(serializers.ModelSerializer):
-	class Meta:
-		model = Project
-		fields = [
-			"id", "title", "type", "location", "budget", "plannedCredits",
-			"status", "createdAt"
-		]
-		read_only_fields = ["id", "status", "createdAt"]
-
-	def to_representation(self, instance):
-		rep = super().to_representation(instance)
-		rep["id"] = f"proj_{instance.id}"
-		return rep
-from rest_framework import filters
-
-class ProjectListAPIView(generics.ListAPIView):
-	@swagger_auto_schema(operation_id="projects_list_all")
-	def get(self, request, *args, **kwargs):
-		return super().get(request, *args, **kwargs)
-
-	serializer_class = ProjectListSerializer
-	queryset = Project.objects.all()
-	filter_backends = [filters.OrderingFilter]
-
-	def get_queryset(self):
-		qs = Project.objects.all()
-		user = self.request.user
-		params = self.request.query_params
-
-		# Filtering by status, type, region
-		status_param = params.get("status")
-		type_param = params.get("type")
-		region_param = params.get("region")
-
-		if status_param:
-			qs = qs.filter(status=status_param)
-		if type_param:
-			qs = qs.filter(type=type_param)
-		if region_param:
-			qs = qs.filter(location__region__icontains=region_param)
-
-		# Role-based visibility
-		if user.is_authenticated:
-			try:
-				role = user.profile.role
-				if role == "buyer":
-					qs = qs.filter(status="approved")
-				# regulators see all, issuers see their own + all?
-			except Profile.DoesNotExist:
-				qs = qs.none()
-		else:
-			# Unauthenticated users see only approved
-			qs = qs.filter(status="approved")
-
-		return qs
-
-class IsIssuer(permissions.BasePermission):
-	def has_permission(self, request, view):
-		if not request.user.is_authenticated:
-			return False
-		try:
-			return request.user.profile.role == "issuer"
-		except Profile.DoesNotExist:
-			return False
-
-class ProjectCreateAPIView(generics.CreateAPIView):
-	@swagger_auto_schema(operation_id="projects_create")
-	def post(self, request, *args, **kwargs):
-		return super().post(request, *args, **kwargs)
-
-	def get_view_name(self):
-		return "projects_create"
-
-	serializer_class = ProjectSerializer
-	permission_classes = [permissions.IsAuthenticated, IsIssuer]
-
-	def perform_create(self, serializer):
-		serializer.save(issuer=self.request.user)
-from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from rest_framework import status
-import random
-
-class ProjectVerifyAPIView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    @swagger_auto_schema(operation_id="projects_verify", responses={200: "Verification result"})
-    def post(self, request, id):
-        # Mock AI verification logic
-        verified = True
-        impact_score = random.randint(70, 95)
-        verification_report = "Tree cover increased by 12% compared to baseline."
-        # Mock blockchain tx hash
-        blockchain_tx_hash = f"0x{random.randint(10**11, 10**12-1):x}def456"
-        return Response({
-            "projectId": f"proj_{id}",
-            "verified": verified,
-            "impactScore": impact_score,
-            "verificationReport": verification_report,
-            "blockchainTxHash": blockchain_tx_hash
-        }, status=status.HTTP_200_OK)
-
-
-
-
-
-"""
