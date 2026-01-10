@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 import { Button } from "../components/ui/button";
 import {
   Card,
@@ -17,8 +18,11 @@ import {
   Filter,
   MapPin,
   Award,
-  ExternalLink,
-  IndianRupeeIcon
+  ArrowUpRight,
+  ArrowDownLeft,
+  Loader2,
+  RefreshCw,
+  User,
 } from "lucide-react";
 import Sidebar from "./ui/Sidebar";
 import Navbar from "./ui/Navbar";
@@ -29,95 +33,84 @@ const PurchaseHistory = () => {
   const [toastMessage, setToastMessage] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [transactions, setTransactions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState(null);
   const navigate = useNavigate();
   const query = searchQuery.toLowerCase();
 
-  const purchases = [
-    {
-      id: "TXN-2024-001",
-      date: "2024-03-15",
-      projectName: "Rainforest Conservation",
-      location: "Gujarat",
-      credits: 3000,
-      pricePerCredit: 18.5,
-      totalAmount: 55500,
-      status: "Pending",
-      type: "Forestry",
-      transactionHash: "0x1a2b3c4d5e6f...",
-    },
-    {
-      id: "TXN-2024-002",
-      date: "2024-03-10",
-      projectName: "Wind Farm Energy Project",
-      location: "Jaipur",
-      credits: 2200,
-      pricePerCredit: 15.75,
-      totalAmount: 34650,
-      status: "Completed",
-      type: "Renewable Energy",
-      transactionHash: "0x2b3c4d5e6f7g...",
-    },
-    {
-      id: "TXN-2024-003",
-      date: "2024-03-05",
-      projectName: "Mangrove Restoration",
-      location: "Mumbai",
-      credits: 1800,
-      pricePerCredit: 20.0,
-      totalAmount: 36000,
-      status: "Completed",
-      type: "Marine Conservation",
-      transactionHash: "0x3c4d5e6f7g8h...",
-    },
-    {
-      id: "TXN-2024-004",
-      date: "2024-02-28",
-      projectName: "Solar Power Initiative",
-      location: "Uttar Pradesh",
-      credits: 3000,
-      pricePerCredit: 14.25,
-      totalAmount: 42750,
-      status: "Completed",
-      type: "Renewable Energy",
-      transactionHash: "0x4d5e6f7g8h9i...",
-    },
-    {
-      id: "TXN-2024-005",
-      date: "2024-02-20",
-      projectName: "Reforestation Program",
-      location: "Tamil Nadu",
-      credits: 1500,
-      pricePerCredit: 19.5,
-      totalAmount: 29250,
-      status: "Completed",
-      type: "Forestry",
-      transactionHash: "0x5e6f7g8h9i0j...",
-    },
-    {
-      id: "TXN-2024-006",
-      date: "2024-02-15",
-      projectName: "Ocean Cleanup Project",
-      location: "Indian Ocean",
-      credits: 2000,
-      pricePerCredit: 22.0,
-      totalAmount: 44000,
-      status: "Pending",
-      type: "Marine Conservation",
-      transactionHash: "0x6f7g8h9i0j1k...",
-    },
-  ];
+  useEffect(() => {
+    fetchTransactions();
+  }, []);
 
-  const totalSpent = purchases.reduce((sum, p) => sum + p.totalAmount, 0);
-  const totalCredits = purchases.reduce((sum, p) => sum + p.credits, 0);
-  const completedTransactions = purchases.filter(
-    (p) => p.status === "Completed"
-  ).length;
+  const fetchTransactions = async () => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      navigate("/Login");
+      return;
+    }
 
-const filteredPurchases = purchases.filter(p =>
-  p.id.toLowerCase().includes(query) ||
-  p.projectName.toLowerCase().includes(query) ||
-  p.location.toLowerCase().includes(query)
-);
+    // Get user ID from token (ensure it's a number for comparison)
+    let currentUserId = null;
+    try {
+      const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+      currentUserId = parseInt(tokenPayload.user_id || tokenPayload.sub, 10);
+      setUserId(currentUserId);
+    } catch (e) {
+      console.error("Error parsing token:", e);
+      setUserId(null);
+    }
+
+    setLoading(true);
+    try {
+      const response = await axios.get(
+        "http://127.0.0.1:8000/api/transactions/my/",
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      console.log("Transactions fetched:", response.data);
+      console.log("Current user ID:", currentUserId);
+      setTransactions(response.data);
+    } catch (error) {
+      console.error("Error fetching transactions:", error);
+      if (error.response?.status === 401) {
+        localStorage.removeItem("accessToken");
+        navigate("/Login");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Determine if user is buyer or seller for each transaction
+  const getTransactionType = (transaction) => {
+    // Ensure numeric comparison
+    const buyerId = parseInt(transaction.buyer_id, 10);
+    const sellerId = parseInt(transaction.seller_id, 10);
+    const currentUser = parseInt(userId, 10);
+    
+    if (buyerId === currentUser) return "PURCHASE";
+    if (sellerId === currentUser) return "SALE";
+    return "UNKNOWN";
+  };
+
+  // Calculate stats based on transaction type
+  const totalSpent = transactions
+    .filter(t => getTransactionType(t) === "PURCHASE")
+    .reduce((sum, t) => sum + parseFloat(t.total_amount || 0), 0);
+  
+  const totalEarned = transactions
+    .filter(t => getTransactionType(t) === "SALE")
+    .reduce((sum, t) => sum + parseFloat(t.total_amount || 0), 0);
+  
+  const totalCreditsTransferred = transactions.reduce((sum, t) => sum + t.credits_transferred, 0);
+
+  // Filter transactions
+  const filteredTransactions = transactions.filter(t =>
+    t.id.toString().includes(query) ||
+    (t.project_name || '').toLowerCase().includes(query) ||
+    (t.seller_username || '').toLowerCase().includes(query) ||
+    (t.buyer_username || '').toLowerCase().includes(query)
+  );
 
   return (
     <div
@@ -148,16 +141,28 @@ const filteredPurchases = purchases.filter(p =>
         >
           <main className="px-6 py-4 max-w-7xl mx-auto space-y-8">
             {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
               <Card className="bg-slate-900 border-slate-800">
                 <CardContent className="pt-6 flex justify-between items-center">
                   <div>
                     <p className="flex items-start text-sm text-slate-400">Total Spent</p>
-                    <p className="text-3xl font-bold text-primary">
-                      ₹ {totalSpent.toLocaleString()}
+                    <p className="text-3xl font-bold text-red-400">
+                      ${totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                   </div>
-                  <IndianRupeeIcon className="w-8 h-8 text-primary" />
+                  <ArrowUpRight className="w-8 h-8 text-red-400" />
+                </CardContent>
+              </Card>
+
+              <Card className="bg-slate-900 border-slate-800">
+                <CardContent className="pt-6 flex justify-between items-center">
+                  <div>
+                    <p className="flex items-start text-sm text-slate-400">Total Earned</p>
+                    <p className="text-3xl font-bold text-emerald-400">
+                      ${totalEarned.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                  <ArrowDownLeft className="w-8 h-8 text-emerald-400" />
                 </CardContent>
               </Card>
 
@@ -165,13 +170,13 @@ const filteredPurchases = purchases.filter(p =>
                 <CardContent className="pt-6 flex justify-between items-center">
                   <div>
                     <p className="flex items-start text-sm text-slate-400">
-                      Total Credits
+                      Credits Transferred
                     </p>
-                    <p className="text-3xl font-bold text-success">
-                      {totalCredits.toLocaleString()}
+                    <p className="text-3xl font-bold text-cyan-400">
+                      {totalCreditsTransferred.toLocaleString()}
                     </p>
                   </div>
-                  <Award className="w-8 h-8 text-success" />
+                  <Award className="w-8 h-8 text-cyan-400" />
                 </CardContent>
               </Card>
 
@@ -181,11 +186,11 @@ const filteredPurchases = purchases.filter(p =>
                     <p className="flex items-start text-sm text-slate-400">
                       Transactions
                     </p>
-                    <p className="text-3xl font-bold text-info">
-                      {completedTransactions}
+                    <p className="text-3xl font-bold text-purple-400">
+                      {transactions.length}
                     </p>
                   </div>
-                  <ShoppingCart className="w-8 h-8 text-info" />
+                  <ShoppingCart className="w-8 h-8 text-purple-400" />
                 </CardContent>
               </Card>
             </div>
@@ -196,11 +201,19 @@ const filteredPurchases = purchases.filter(p =>
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-900 " />
                 <Input
                   className="pl-10 text-slate-900 placeholder:text-slate-900"
-                  placeholder="Search projects by name, location, or type..."
+                  placeholder="Search by transaction ID, project name, or username..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
+              <Button
+                variant="outline"
+                className="gap-2 rounded bg-slate-700 text-white border-slate-700 hover:bg-slate-600 hover:text-white"
+                onClick={fetchTransactions}
+              >
+                <RefreshCw className="w-4 h-4" />
+                Refresh
+              </Button>
               <Button
                 variant="outline"
                 className="gap-2 rounded bg-emerald-600 text-white border-slate-700  hover:bg-emerald-500 hover:text-white"
@@ -219,95 +232,130 @@ const filteredPurchases = purchases.filter(p =>
               <CardHeader className="flex items-start">
                 <CardTitle>Transaction History</CardTitle>
                 <CardDescription>
-                  Complete list of all your carbon credit purchases
+                  Complete list of all your carbon credit transactions (purchases & sales)
                 </CardDescription>
               </CardHeader>
 
               <CardContent className="pt-2 space-y-4">
-                {filteredPurchases.map((purchase) => (
-                  <Card key={purchase.id}
-                  className="bg-muted/30 border-border/50 hover:shadow-xl transition-all shadow-md">
-                    <CardContent className="pt-2 p-6 space-y-4">
-                      <div className="flex flex-col lg:flex-row justify-between gap-6">
-                        <div>
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="text-sm font-mono bg-gray-100 px-2 py-1 rounded-sm">
-                              {purchase.id}
-                            </span>
-                            <Badge className={purchase.status==="Completed"
-                            ?"bg-green-200 text-success border-green-700"
-                            :"bg-amber-300 text-amber-700 border-red-700"}>{purchase.status}</Badge>
-                            <Badge className={"bg-blue-200 text-blue-700 border-blue-900"}>{purchase.type}</Badge>
-                          </div>
+                {loading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+                    <span className="ml-2 text-slate-600">Loading transactions...</span>
+                  </div>
+                ) : filteredTransactions.length === 0 ? (
+                  <div className="text-center py-12">
+                    <ShoppingCart className="w-16 h-16 mx-auto text-slate-300 mb-4" />
+                    <p className="text-slate-600 text-lg font-medium">
+                      {searchQuery ? "No transactions found matching your search." : "No transactions yet"}
+                    </p>
+                    <p className="text-slate-500 text-sm mt-2">
+                      {searchQuery ? "Try a different search term." : "Your transaction history will appear here once you buy or sell credits."}
+                    </p>
+                  </div>
+                ) : (
+                  filteredTransactions.map((transaction) => {
+                    const txType = getTransactionType(transaction);
+                    const isBuyer = txType === "PURCHASE";
+                    
+                    return (
+                      <Card key={transaction.id}
+                        className="bg-muted/30 border-border/50 hover:shadow-xl transition-all shadow-md">
+                        <CardContent className="pt-2 p-6 space-y-4">
+                          <div className="flex flex-col lg:flex-row justify-between gap-6">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                <span className="text-sm font-mono bg-gray-100 px-2 py-1 rounded-sm">
+                                  TXN-{transaction.id}
+                                </span>
+                                <Badge className={isBuyer
+                                  ? "bg-red-100 text-red-700 border-red-300"
+                                  : "bg-emerald-100 text-emerald-700 border-emerald-300"
+                                }>
+                                  {isBuyer ? (
+                                    <><ArrowUpRight className="w-3 h-3 mr-1" /> Purchase</>
+                                  ) : (
+                                    <><ArrowDownLeft className="w-3 h-3 mr-1" /> Sale</>
+                                  )}
+                                </Badge>
+                                {transaction.project_type && (
+                                  <Badge className="bg-blue-100 text-blue-700 border-blue-300">
+                                    {transaction.project_type}
+                                  </Badge>
+                                )}
+                              </div>
 
-                          <h3 className="flex text-lg font-semibold items-start">
-                            {purchase.projectName}
-                          </h3>
+                              <h3 className="flex text-lg font-semibold items-start text-slate-800">
+                                {transaction.project_name || `Project #${transaction.project_id}`}
+                              </h3>
 
-                          <div className="flex gap-4 text-sm text-slate-600 mt-2">
-                            <span className="flex items-center gap-1">
-                              <MapPin className="w-3 h-3" />
-                              {purchase.location}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Calendar className="w-3 h-3" />
-                              {purchase.date}
-                            </span>
-                            <button className="flex items-center gap-1 hover:text-primary">
-                              <ExternalLink className="w-3 h-3" />
-                              View on blockchain
-                            </button>
-                          </div>
-                        </div>
+                              <div className="flex gap-4 text-sm text-slate-600 mt-2 flex-wrap">
+                                {transaction.project_location && transaction.project_location !== "N/A" && (
+                                  <span className="flex items-center gap-1">
+                                    <MapPin className="w-3 h-3" />
+                                    {transaction.project_location}
+                                  </span>
+                                )}
+                                <span className="flex items-center gap-1">
+                                  <Calendar className="w-3 h-3" />
+                                  {new Date(transaction.timestamp).toLocaleDateString('en-IN', {
+                                    year: 'numeric',
+                                    month: 'short',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </span>
+                              </div>
 
-                        <div className="flex gap-8 text-center">
-                          <div>
-                            <p className="text-sm text-slate-600">
-                              Credits
-                            </p>
-                            <p className="text-xl font-bold">
-                              {purchase.credits}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-slate-600">
-                              Price
-                            </p>
-                            <p className="text-xl font-bold text-primary">
-                              ${purchase.pricePerCredit}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-slate-600">
-                              Total
-                            </p>
-                            <p className="text-xl font-bold text-success">
-                              ${purchase.totalAmount.toLocaleString()}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
+                              {/* Buyer/Seller Info */}
+                              <div className="flex gap-4 text-sm mt-3">
+                                {isBuyer ? (
+                                  <span className="flex items-center gap-1 text-slate-600">
+                                    <User className="w-3 h-3" />
+                                    Seller: <span className="font-medium text-slate-800">{transaction.seller_username}</span>
+                                  </span>
+                                ) : (
+                                  <span className="flex items-center gap-1 text-slate-600">
+                                    <User className="w-3 h-3" />
+                                    Buyer: <span className="font-medium text-slate-800">{transaction.buyer_username}</span>
+                                  </span>
+                                )}
+                              </div>
+                            </div>
 
-                      <div className="mt-4 pt-1.5 border-t border-border/50">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-slate-600">Transaction Hash:</span>
-                          <code className="text-xs font-mono bg-gray-100 px-2 py-1 rounded-sm text-foreground">
-                            {purchase.transactionHash}
-                          </code>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-                
+                            <div className="flex gap-8 text-center items-center">
+                              <div>
+                                <p className="text-sm text-slate-600">
+                                  Credits
+                                </p>
+                                <p className="text-xl font-bold text-slate-800">
+                                  {transaction.credits_transferred.toLocaleString()}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-slate-600">
+                                  Price/Credit
+                                </p>
+                                <p className="text-xl font-bold text-blue-600">
+                                  ${parseFloat(transaction.price_per_credit || 0).toFixed(2)}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-slate-600">
+                                  Total
+                                </p>
+                                <p className={`text-xl font-bold ${isBuyer ? 'text-red-600' : 'text-emerald-600'}`}>
+                                  {isBuyer ? '-' : '+'}${(transaction.total_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })
+                )}
               </CardContent>
-              {filteredPurchases.length === 0 && (
-              <div className="text-center py-12">
-                <p className="text-slate-400 text-lg">
-                  No projects found matching your search.
-                </p>
-              </div>
-            )}
             </Card>
           </main>
         </div>
