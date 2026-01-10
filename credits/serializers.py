@@ -5,6 +5,10 @@ from .models import CreditWallet
 # 1️⃣ Wallet Read Serializer (GET APIs)
 # Used to SHOW wallet data to frontend
 class CreditWalletSerializer(serializers.ModelSerializer):
+    project_id = serializers.IntegerField(source='project.id', read_only=True, allow_null=True)
+    project_name = serializers.CharField(source='project.project_name', read_only=True, allow_null=True)
+    project_type = serializers.CharField(source='project.classification', read_only=True, allow_null=True)
+    project_location = serializers.SerializerMethodField()
 
     class Meta:
         model = CreditWallet
@@ -12,12 +16,21 @@ class CreditWalletSerializer(serializers.ModelSerializer):
             'id',
             'user',
             'project_id',
+            'project_name',
+            'project_type',
+            'project_location',
             'credit_type',
             'available_credits',
             'used_credits',
             'created_at'
         ]
         read_only_fields = fields
+
+    def get_project_location(self, obj):
+        try:
+            return obj.project.location if obj.project else None
+        except:
+            return None
 
 
 # 2️⃣ Dashboard Summary Serializer

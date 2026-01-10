@@ -191,8 +191,9 @@ function Mycredits() {
       return {
         id: c.id,
         project_id: c.project_id,
-        projectName: c.project_id ? `Project #${c.project_id}` : "Direct Issuance",
-        location: "N/A",
+        projectName: c.project_name || (c.project_id ? `Project #${c.project_id}` : "Direct Issuance"),
+        location: c.project_location || "N/A",
+        projectType: c.project_type || "Carbon Credit",
         amount: c.available_credits,
         purchaseDate: c.created_at,
         status: c.available_credits > 0 ? "Active" : "Used",
@@ -209,8 +210,9 @@ function Mycredits() {
       return {
         id: c.id,
         project_id: c.project_id,
-        projectName: c.project_id ? `Project #${c.project_id}` : "Marketplace Purchase",
-        location: "N/A", 
+        projectName: c.project_name || (c.project_id ? `Project #${c.project_id}` : "Marketplace Purchase"),
+        location: c.project_location || "N/A",
+        projectType: c.project_type || "Carbon Credit",
         amount: c.available_credits,
         purchaseDate: c.created_at,
         status: c.available_credits > 0 ? "Active" : "Used",

@@ -2,11 +2,23 @@ import React from "react";
 import GradientBg from '../../assets/GradientBg.png';
 import { Menu, Bell, User, ChevronDown, Settings, LogOut, Search,Leaf } from "lucide-react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 
 const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    // Clear all auth tokens from localStorage
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    // Close the menu
+    setUserMenuOpen(false);
+    // Redirect to login page
+    navigate("/Login");
+  };
+
   return (
     <>
     <div className="absolute"></div>
@@ -59,10 +71,19 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
 
               {userMenuOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white border border-white/20 rounded-xl shadow-xl overflow-hidden">
-                  <button className="w-full px-4 py-3 text-left hover:bg-white/40 transition-colors flex items-center gap-2 text-sm">
+                  <button 
+                    onClick={() => {
+                      setUserMenuOpen(false);
+                      navigate("/Profile");
+                    }}
+                    className="w-full px-4 py-3 text-left hover:bg-white/40 transition-colors flex items-center gap-2 text-sm"
+                  >
                     <User size={16} /> Profile
                   </button>
-                  <button className="w-full px-4 py-3 text-left hover:bg-white/40 transition-colors flex items-center gap-2 text-sm border-t border-white/10 text-red-600">
+                  <button 
+                    onClick={handleLogout}
+                    className="w-full px-4 py-3 text-left hover:bg-white/40 transition-colors flex items-center gap-2 text-sm border-t border-white/10 text-red-600"
+                  >
                     <LogOut size={16} /> Signout
                   </button>
                 </div>

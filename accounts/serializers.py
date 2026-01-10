@@ -81,3 +81,24 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError("Invalid username or password.")
         data['user'] = user
         return data
+
+
+class ProfileSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='user.username', read_only=True)
+    user_id = serializers.IntegerField(source='user.id', read_only=True)
+    
+    class Meta:
+        model = Profile
+        fields = [
+            'user_id',
+            'username',
+            'name',
+            'email',
+            'registration_no',
+            'registration_year',
+            'owner_name',
+            'phone',
+            'pan_id',
+            'metamask_wallet_address',
+            'created_at',
+        ]

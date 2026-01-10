@@ -8,6 +8,7 @@ import Mycredits from "./components/Mycredits";
 import PurchaseHistory from "./components/PurchaseHistory";
 import AddProject from "./components/AddProject";
 import ViewProjects from "./components/ViewProjects";
+import Profile from "./components/Profile";
 import "./App.css";
 
 function App() {
@@ -23,6 +24,7 @@ function App() {
         <Route path="/PurchaseHistory" element={<PurchaseHistory/>}/>
         <Route path="/AddProject" element={<AddProject/>}/>
         <Route path="/ViewProjects" element={<ViewProjects/>}/>
+        <Route path="/Profile" element={<Profile/>}/>
       </Routes>
     </>
   );

@@ -1,8 +1,19 @@
 from rest_framework import generics, status
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import RegisterSerializer
+from .serializers import RegisterSerializer, ProfileSerializer
+from .models import Profile
+
+
+class ProfileView(generics.RetrieveAPIView):
+    """Get current user's profile"""
+    serializer_class = ProfileSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return Profile.objects.get(user=self.request.user)
+
 
 class RegisterAPIView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
