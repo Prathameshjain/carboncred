@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
+import html2canvas from "html2canvas-pro";
+import jsPDF from "jspdf";
 import Sidebar from "./ui/Sidebar";
 import Navbar from "./ui/Navbar";
 import Footer from "./ui/Footer";
@@ -23,6 +25,7 @@ import {
   X,
   Store,
   CheckCircle,
+  ShoppingCart,
 } from "lucide-react";
 import {
   Card,
@@ -37,6 +40,7 @@ import { useNavigate } from "react-router-dom";
 
 function Mycredits() {
   const navigate = useNavigate();
+  const purchaseCertificateRef = useRef(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
@@ -52,6 +56,7 @@ function Mycredits() {
   const [loadingProject, setLoadingProject] = useState(false);
   const [userId, setUserId] = useState(null);
   const [listingLoading, setListingLoading] = useState(false);
+  const [downloadingCertificate, setDownloadingCertificate] = useState(false);
   
   // API data states
   const [issuedCredits, setIssuedCredits] = useState([]);
@@ -63,6 +68,50 @@ function Mycredits() {
     issued_available: 0,
     purchased_available: 0,
   });
+
+  // Download Purchase Certificate as PDF
+  const downloadPurchaseCertificate = async () => {
+    if (!purchaseCertificateRef.current || !selectedCredit) return;
+    
+    setDownloadingCertificate(true);
+    try {
+      const element = purchaseCertificateRef.current;
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff",
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const aspectRatio = imgHeight / imgWidth;
+
+      const a4Width = 210;
+      const a4Height = 297;
+      let pdfWidth = a4Width;
+      let pdfHeight = a4Width * aspectRatio;
+
+      if (pdfHeight > a4Height) {
+        pdfHeight = a4Height;
+        pdfWidth = a4Height / aspectRatio;
+      }
+
+      const pdf = new jsPDF({
+        orientation: pdfHeight > pdfWidth ? "portrait" : "landscape",
+        unit: "mm",
+        format: [pdfWidth, pdfHeight],
+      });
+
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`CarbonCred_Purchase_Certificate_${selectedCredit.id}.pdf`);
+    } catch (error) {
+      console.error("Error generating certificate:", error);
+    } finally {
+      setDownloadingCertificate(false);
+    }
+  };
 
   // Fetch credits from API
   useEffect(() => {
@@ -176,7 +225,7 @@ function Mycredits() {
   ];
 
   const totalCredits = creditSummary.total_available;
-  const totalValue = credits.reduce((sum, credit) => sum + credit.value, 0);
+  const totalValue = credits.reduce((sum, credit) => sum + (credit.value || credit.amount * 18.5), 0);
   const totalRetired = creditSummary.total_used;
   const activeCredits = creditSummary.total_available;
 
@@ -187,6 +236,15 @@ function Mycredits() {
 
   // Fetch full project details and open report dialog
   const openProjectReport = async (credit) => {
+    // For PURCHASED credits, only show basic credit details (not the full project report)
+    // The buyer shouldn't see the seller's full verification report
+    if (credit.creditType === "PURCHASED") {
+      setSelectedCredit(credit);
+      setOpenDetailsDialog(true);
+      return;
+    }
+
+    // For ISSUED credits (project owner), show full verification report
     if (!credit.project_id) {
       // No project associated, show basic details instead
       setSelectedCredit(credit);
@@ -479,12 +537,13 @@ function Mycredits() {
                               </div>
                             )}
 
-                            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center gap-2">
                               <Button
                                 size="sm"
                                 className="gap-2 rounded bg-linear-to-r bg-blue-100 border-slate-600 text-slate-800 hover:bg-slate-800 hover:text-white"
                                 onClick={(e) => {
                                   e.stopPropagation();
+                                  e.preventDefault();
                                   showDetails(credit);
                                 }}
                               >
@@ -495,8 +554,11 @@ function Mycredits() {
                               {credit.isListed ? (
                                 <Button
                                   size="sm"
-                                  className="gap-2 rounded bg-emerald-500 text-white hover:bg-emerald-600 shadow-md"
-                                  disabled
+                                  className="gap-2 rounded bg-emerald-500 text-white cursor-default shadow-md pointer-events-none"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                  }}
                                 >
                                   <CheckCircle className="w-4 h-4" />
                                   Listed
@@ -507,6 +569,7 @@ function Mycredits() {
                                   className="gap-2 rounded bg-linear-to-r from-emerald-500 to bg-teal-600 text-white hover:bg-emerald-600 shadow-md shadow-emerald-500/20"
                                   onClick={(e) => {
                                     e.stopPropagation();
+                                    e.preventDefault();
                                     setSelectedProject({
                                       id: credit.id,
                                       project_id: credit.project_id,
@@ -542,10 +605,12 @@ function Mycredits() {
               <DialogHeader>
                 <DialogTitle className="text-xl text-slate-900 font-bold flex items-center gap-2">
                   <Award className="w-5 h-5 text-emerald-600" />
-                  Credit Details
+                  {selectedCredit?.creditType === "PURCHASED" ? "Purchased Credit Details" : "Credit Details"}
                 </DialogTitle>
                 <DialogDescription className="text-slate-600">
-                  View detailed information about this credit.
+                  {selectedCredit?.creditType === "PURCHASED" 
+                    ? "View details of your marketplace purchase."
+                    : "View detailed information about this credit."}
                 </DialogDescription>
               </DialogHeader>
 
@@ -553,11 +618,41 @@ function Mycredits() {
                 <div className="space-y-4 mt-4">
                   {/* Project Name */}
                   <div className="bg-slate-50 rounded-lg p-4">
-                    <p className="text-sm text-slate-500 mb-1">Project Name</p>
+                    <p className="text-sm text-slate-500 mb-1">
+                      {selectedCredit.creditType === "PURCHASED" ? "Original Project" : "Project Name"}
+                    </p>
                     <p className="text-lg font-semibold text-slate-900">
                       {selectedCredit.projectName}
                     </p>
                   </div>
+
+                  {/* Purchase Info - Only for PURCHASED credits */}
+                  {selectedCredit.creditType === "PURCHASED" && (
+                    <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                      <div className="flex items-center gap-2 mb-3">
+                        <ShoppingCart className="w-4 h-4 text-blue-600" />
+                        <p className="text-sm font-semibold text-blue-700">Purchase Information</p>
+                      </div>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-blue-600">Purchase Date</span>
+                          <span className="font-medium text-blue-800">
+                            {new Date(selectedCredit.purchaseDate).toLocaleDateString('en-IN', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-blue-600">Acquired Via</span>
+                          <Badge className="bg-blue-100 text-blue-700">Marketplace</Badge>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Credit Info Grid */}
                   <div className="grid grid-cols-2 gap-4">
@@ -582,7 +677,7 @@ function Mycredits() {
                     <div className="bg-purple-50 rounded-lg p-4">
                       <p className="text-sm text-purple-600 mb-1">Portfolio Value</p>
                       <p className="text-2xl font-bold text-purple-700">
-                        ${selectedCredit.value.toLocaleString()}
+                        ${(selectedCredit.value || selectedCredit.amount * 18.5).toLocaleString()}
                       </p>
                     </div>
                   </div>
@@ -596,7 +691,7 @@ function Mycredits() {
                           ? "bg-emerald-100 text-emerald-700" 
                           : "bg-blue-100 text-blue-700"
                       }>
-                        {selectedCredit.creditType}
+                        {selectedCredit.creditType === "PURCHASED" ? "PURCHASED" : "ISSUED"}
                       </Badge>
                     </div>
                     <div className="flex justify-between items-center">
@@ -613,33 +708,182 @@ function Mycredits() {
                       <span className="text-slate-600">Type</span>
                       <span className="font-medium text-slate-900">{selectedCredit.type}</span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-600">Location</span>
-                      <span className="font-medium text-slate-900">{selectedCredit.location}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-600">Purchase Date</span>
-                      <span className="font-medium text-slate-900">
-                        {new Date(selectedCredit.purchaseDate).toLocaleDateString('en-IN', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric'
-                        })}
-                      </span>
-                    </div>
+                    {selectedCredit.creditType === "ISSUED" && (
+                      <>
+                        <div className="flex justify-between items-center">
+                          <span className="text-slate-600">Location</span>
+                          <span className="font-medium text-slate-900">{selectedCredit.location}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-slate-600">Issue Date</span>
+                          <span className="font-medium text-slate-900">
+                            {new Date(selectedCredit.purchaseDate).toLocaleDateString('en-IN', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric'
+                            })}
+                          </span>
+                        </div>
+                      </>
+                    )}
                   </div>
 
-                  {/* Action Button */}
-                  <Button
-                    className="w-full rounded bg-slate-800 text-white hover:bg-slate-700"
-                    onClick={() => setOpenDetailsDialog(false)}
-                  >
-                    Close
-                  </Button>
+                  {/* Marketplace Status - for listed credits */}
+                  {selectedCredit.isListed && selectedCredit.listingInfo && (
+                    <div className="bg-emerald-50 rounded-lg p-4 border border-emerald-200">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Store className="w-4 h-4 text-emerald-600" />
+                        <p className="text-sm font-semibold text-emerald-700">Marketplace Listing</p>
+                      </div>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-emerald-600">Credits Listed</span>
+                          <span className="font-medium text-emerald-800">
+                            {selectedCredit.listingInfo.credits_for_sale}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-emerald-600">Price per Credit</span>
+                          <span className="font-medium text-emerald-800">
+                            ${parseFloat(selectedCredit.listingInfo.price_per_credit).toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-emerald-600">Total Value</span>
+                          <span className="font-bold text-emerald-800">
+                            ${(selectedCredit.listingInfo.credits_for_sale * parseFloat(selectedCredit.listingInfo.price_per_credit)).toLocaleString()}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-2">
+                    {selectedCredit.creditType === "PURCHASED" && (
+                      <Button
+                        className="flex-1 rounded bg-emerald-600 text-white hover:bg-emerald-700"
+                        onClick={downloadPurchaseCertificate}
+                        disabled={downloadingCertificate}
+                      >
+                        <Download className="w-4 h-4 mr-2" />
+                        {downloadingCertificate ? "Generating..." : "Download Certificate"}
+                      </Button>
+                    )}
+                    <Button
+                      className={`${selectedCredit.creditType === "PURCHASED" ? "flex-1" : "w-full"} rounded bg-slate-800 text-white hover:bg-slate-700`}
+                      onClick={() => setOpenDetailsDialog(false)}
+                    >
+                      Close
+                    </Button>
+                  </div>
                 </div>
               )}
             </DialogContent>
           </Dialog>
+
+          {/* Hidden Purchase Certificate for PDF Generation */}
+          {selectedCredit && selectedCredit.creditType === "PURCHASED" && (
+            <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
+              <div 
+                ref={purchaseCertificateRef}
+                style={{ 
+                  width: '800px', 
+                  padding: '40px',
+                  backgroundColor: '#ffffff',
+                  fontFamily: 'Arial, sans-serif'
+                }}
+              >
+                {/* Certificate Header */}
+                <div style={{ textAlign: 'center', marginBottom: '30px', borderBottom: '3px solid #10b981', paddingBottom: '20px' }}>
+                  <h1 style={{ fontSize: '28px', fontWeight: 'bold', color: '#064e3b', marginBottom: '5px' }}>
+                    🌱 CarbonCred
+                  </h1>
+                  <h2 style={{ fontSize: '22px', fontWeight: '600', color: '#1e293b', marginBottom: '5px' }}>
+                    Carbon Credit Purchase Certificate
+                  </h2>
+                  <p style={{ fontSize: '12px', color: '#64748b' }}>
+                    Certificate ID: CC-{selectedCredit.id}-{Date.now().toString(36).toUpperCase()}
+                  </p>
+                </div>
+
+                {/* Certificate Body */}
+                <div style={{ marginBottom: '30px' }}>
+                  <p style={{ fontSize: '14px', color: '#475569', marginBottom: '20px', textAlign: 'center' }}>
+                    This certifies that the following carbon credits have been successfully purchased and transferred.
+                  </p>
+
+                  {/* Credit Details Table */}
+                  <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '20px' }}>
+                    <tbody>
+                      <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                        <td style={{ padding: '12px', fontWeight: '600', color: '#475569', width: '40%' }}>Original Project</td>
+                        <td style={{ padding: '12px', color: '#1e293b' }}>{selectedCredit.projectName}</td>
+                      </tr>
+                      <tr style={{ borderBottom: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }}>
+                        <td style={{ padding: '12px', fontWeight: '600', color: '#475569' }}>Credits Purchased</td>
+                        <td style={{ padding: '12px', color: '#1e293b', fontWeight: 'bold' }}>{selectedCredit.amount.toLocaleString()} Credits</td>
+                      </tr>
+                      <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                        <td style={{ padding: '12px', fontWeight: '600', color: '#475569' }}>Credit Type</td>
+                        <td style={{ padding: '12px', color: '#1e293b' }}>{selectedCredit.type}</td>
+                      </tr>
+                      <tr style={{ borderBottom: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }}>
+                        <td style={{ padding: '12px', fontWeight: '600', color: '#475569' }}>Purchase Date</td>
+                        <td style={{ padding: '12px', color: '#1e293b' }}>
+                          {new Date(selectedCredit.purchaseDate).toLocaleDateString('en-IN', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </td>
+                      </tr>
+                      <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                        <td style={{ padding: '12px', fontWeight: '600', color: '#475569' }}>Acquired Via</td>
+                        <td style={{ padding: '12px', color: '#1e293b' }}>CarbonCred Marketplace</td>
+                      </tr>
+                      <tr style={{ borderBottom: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }}>
+                        <td style={{ padding: '12px', fontWeight: '600', color: '#475569' }}>Status</td>
+                        <td style={{ padding: '12px' }}>
+                          <span style={{ 
+                            backgroundColor: selectedCredit.status === 'Active' ? '#dcfce7' : '#fef3c7',
+                            color: selectedCredit.status === 'Active' ? '#166534' : '#92400e',
+                            padding: '4px 12px',
+                            borderRadius: '12px',
+                            fontSize: '12px',
+                            fontWeight: '600'
+                          }}>
+                            {selectedCredit.status}
+                          </span>
+                        </td>
+                      </tr>
+                      <tr style={{ backgroundColor: '#ecfdf5' }}>
+                        <td style={{ padding: '12px', fontWeight: '600', color: '#065f46' }}>Portfolio Value</td>
+                        <td style={{ padding: '12px', color: '#065f46', fontWeight: 'bold', fontSize: '18px' }}>
+                          ${(selectedCredit.value || selectedCredit.amount * 18.5).toLocaleString()}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Footer */}
+                <div style={{ borderTop: '2px solid #e2e8f0', paddingTop: '20px', textAlign: 'center' }}>
+                  <p style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '10px' }}>
+                    This certificate is digitally generated by CarbonCred Platform and serves as proof of purchase.
+                  </p>
+                  <p style={{ fontSize: '11px', color: '#94a3b8' }}>
+                    Generated on: {new Date().toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                  <p style={{ fontSize: '10px', color: '#cbd5e1', marginTop: '15px' }}>
+                    CarbonCred Technologies Pvt. Ltd. | 12th Floor, Jio World Centre, BKC Phase 2, Worli, Mumbai 400001
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Project Verification Report Modal */}
           {openReportDialog && (
