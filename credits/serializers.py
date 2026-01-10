@@ -37,14 +37,42 @@ class CreditWalletSerializer(serializers.ModelSerializer):
             return None
 
     def get_blockchain_minted(self, obj):
+        """
+        For ISSUED credits: return project's blockchain_minted flag
+        For PURCHASED credits: check if purchase transaction exists
+        """
         try:
-            return obj.project.blockchain_minted if obj.project else False
+            if obj.credit_type == 'PURCHASED':
+                from transactions.models import Transaction
+                return Transaction.objects.filter(
+                    buyer=obj.user,
+                    project=obj.project,
+                    blockchain_tx_hash__isnull=False
+                ).exclude(blockchain_tx_hash='').exists()
+            else:
+                return obj.project.blockchain_minted if obj.project else False
         except:
             return False
 
     def get_blockchain_tx_hash(self, obj):
+        """
+        For ISSUED credits: return project's minting tx hash
+        For PURCHASED credits: return purchase transaction tx hash from Transaction table
+        """
         try:
-            return obj.project.blockchain_tx_hash if obj.project else None
+            if obj.credit_type == 'PURCHASED':
+                # Look up the purchase transaction for this buyer and project
+                from transactions.models import Transaction
+                transaction = Transaction.objects.filter(
+                    buyer=obj.user,
+                    project=obj.project
+                ).order_by('-timestamp').first()
+                if transaction and transaction.blockchain_tx_hash:
+                    return transaction.blockchain_tx_hash
+                return None
+            else:
+                # For ISSUED credits, return project minting hash
+                return obj.project.blockchain_tx_hash if obj.project else None
         except:
             return None
 
