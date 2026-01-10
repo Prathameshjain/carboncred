@@ -21,6 +21,8 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.24",
+    "html2canvas-pro": "^1.6.4",
+    "jspdf": "^4.0.0",
     "lucide-react": "^0.542.0",
     "ogl": "^1.0.11",
     "react": "^19.1.1",

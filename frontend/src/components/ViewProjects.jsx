@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Sidebar from "./ui/Sidebar";
 import Navbar from "./ui/Navbar";
 import Footer from "./ui/Footer";
+import VerificationReport from "./VerificationReport";
 import GradientBg from "../assets/GradientBg.png";
 import {
   FolderOpen,
@@ -14,6 +15,7 @@ import {
   Eye,
   RefreshCw,
   PlusCircle,
+  X,
 } from "lucide-react";
 import { Badge } from "./ui/badge";
 
@@ -240,107 +242,38 @@ const ViewProjects = () => {
             </div>
           )}
 
-          {/* Project Detail Modal */}
+          {/* Project Detail Modal with PDF-style Report */}
           {selectedProject && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                <div className="p-6 border-b border-slate-200">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h2 className="text-xl font-bold text-slate-900">
-                        {selectedProject.project_name}
-                      </h2>
-                      <p className="text-sm text-slate-500">
-                        Report ID: {selectedProject.report_id || "Pending"}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => setSelectedProject(null)}
-                      className="text-slate-400 hover:text-slate-600"
-                    >
-                      ✕
-                    </button>
+            <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+              <div className="bg-slate-100 rounded-xl max-w-4xl w-full max-h-[95vh] overflow-hidden flex flex-col shadow-2xl">
+                {/* Modal Header */}
+                <div className="bg-white px-6 py-4 border-b border-slate-200 flex items-center justify-between shrink-0">
+                  <div>
+                    <h2 className="text-lg font-semibold text-slate-800">
+                      Verification Report
+                    </h2>
+                    <p className="text-sm text-slate-500">
+                      {selectedProject.project_name}
+                    </p>
                   </div>
-                </div>
-
-                <div className="p-6 space-y-4">
-                  {/* Status */}
-                  <div className="flex items-center gap-3">
-                    {getStatusBadge(selectedProject.final_decision)}
-                    <Badge className={getClassificationColor(selectedProject.classification)}>
-                      {selectedProject.classification}
-                    </Badge>
-                  </div>
-
-                  {/* Metrics Grid */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="bg-slate-50 p-3 rounded-lg">
-                      <p className="text-xs text-slate-500">Confidence</p>
-                      <p className="text-lg font-semibold">
-                        {selectedProject.confidence_score
-                          ? `${(parseFloat(selectedProject.confidence_score) * 100).toFixed(1)}%`
-                          : "N/A"}
-                      </p>
-                    </div>
-                    <div className="bg-slate-50 p-3 rounded-lg">
-                      <p className="text-xs text-slate-500">Claim Alignment</p>
-                      <p className="text-lg font-semibold">
-                        {selectedProject.claim_alignment || "N/A"}
-                      </p>
-                    </div>
-                    <div className="bg-slate-50 p-3 rounded-lg">
-                      <p className="text-xs text-slate-500">Est. CO₂/year</p>
-                      <p className="text-lg font-semibold">
-                        {selectedProject.estimated_co2_tco2_year || "N/A"}
-                      </p>
-                    </div>
-                    <div className="bg-emerald-50 p-3 rounded-lg">
-                      <p className="text-xs text-emerald-600">Credits Issued</p>
-                      <p className="text-lg font-semibold text-emerald-700">
-                        {selectedProject.credits_issued || 0}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Project Details */}
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <p className="text-slate-500">Project Area</p>
-                      <p className="font-medium">{selectedProject.project_area_hectares} hectares</p>
-                    </div>
-                    <div>
-                      <p className="text-slate-500">Project Cost</p>
-                      <p className="font-medium">₹{selectedProject.project_cost_lakh_inr} Lakh</p>
-                    </div>
-                    <div>
-                      <p className="text-slate-500">Claimed Improvement</p>
-                      <p className="font-medium">{selectedProject.claimed_improvement_pct}%</p>
-                    </div>
-                    <div>
-                      <p className="text-slate-500">Created</p>
-                      <p className="font-medium">
-                        {new Date(selectedProject.created_at).toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Explanation */}
-                  {selectedProject.explanation && (
-                    <div className="bg-slate-50 p-4 rounded-lg">
-                      <p className="text-sm font-medium text-slate-700 mb-2">
-                        Verification Explanation
-                      </p>
-                      <p className="text-sm text-slate-600 whitespace-pre-line">
-                        {selectedProject.explanation}
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                <div className="p-6 border-t border-slate-200 flex justify-end">
                   <button
                     onClick={() => setSelectedProject(null)}
-                    className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200"
+                    className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-700 transition"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* PDF Report Container */}
+                <div className="flex-1 overflow-y-auto p-6">
+                  <VerificationReport project={selectedProject} />
+                </div>
+
+                {/* Modal Footer */}
+                <div className="bg-white px-6 py-4 border-t border-slate-200 flex justify-end gap-3 shrink-0">
+                  <button
+                    onClick={() => setSelectedProject(null)}
+                    className="px-5 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition font-medium"
                   >
                     Close
                   </button>
