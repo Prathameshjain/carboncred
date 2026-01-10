@@ -21,6 +21,8 @@ import {
   Eye,
   ArrowUpRight,
   X,
+  Store,
+  CheckCircle,
 } from "lucide-react";
 import {
   Card,
@@ -48,10 +50,13 @@ function Mycredits() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [loadingProject, setLoadingProject] = useState(false);
+  const [userId, setUserId] = useState(null);
+  const [listingLoading, setListingLoading] = useState(false);
   
   // API data states
   const [issuedCredits, setIssuedCredits] = useState([]);
   const [purchasedCredits, setPurchasedCredits] = useState([]);
+  const [myListings, setMyListings] = useState([]); // Track user's active marketplace listings
   const [creditSummary, setCreditSummary] = useState({
     total_available: 0,
     total_used: 0,
@@ -69,6 +74,16 @@ function Mycredits() {
     if (!token) {
       navigate("/Login");
       return;
+    }
+
+    // Get user ID from token
+    let currentUserId = null;
+    try {
+      const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+      currentUserId = tokenPayload.user_id || tokenPayload.sub || "N/A";
+      setUserId(currentUserId);
+    } catch (e) {
+      setUserId("N/A");
     }
 
     setLoading(true);
@@ -93,6 +108,17 @@ function Mycredits() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setPurchasedCredits(purchasedResponse.data);
+
+      // Fetch user's active marketplace listings
+      const listingsResponse = await axios.get(
+        "http://127.0.0.1:8000/api/marketplace/orders/",
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      // Filter only current user's listings
+      const userListings = listingsResponse.data.filter(
+        listing => listing.seller === currentUserId
+      );
+      setMyListings(userListings);
     } catch (error) {
       console.error("Error fetching credits:", error);
       if (error.response?.status === 401) {
@@ -104,34 +130,49 @@ function Mycredits() {
     }
   };
 
+  // Helper function to check if a credit wallet is listed on marketplace
+  const getListingInfo = (projectId) => {
+    return myListings.find(listing => listing.project === projectId);
+  };
+
   // Combine issued and purchased credits for display
   const credits = [
-    ...issuedCredits.map(c => ({
-      id: c.id,
-      project_id: c.project_id,
-      projectName: c.project_id ? `Project #${c.project_id}` : "Direct Issuance",
-      location: "N/A",
-      amount: c.available_credits,
-      purchaseDate: c.created_at,
-      status: c.available_credits > 0 ? "Active" : "Used",
-      type: c.credit_type,
-      value: c.available_credits * 18.5, // Example price per credit
-      retired: c.used_credits,
-      creditType: "ISSUED",
-    })),
-    ...purchasedCredits.map(c => ({
-      id: c.id,
-      project_id: c.project_id,
-      projectName: c.project_id ? `Project #${c.project_id}` : "Marketplace Purchase",
-      location: "N/A", 
-      amount: c.available_credits,
-      purchaseDate: c.created_at,
-      status: c.available_credits > 0 ? "Active" : "Used",
-      type: c.credit_type,
-      value: c.available_credits * 18.5,
-      retired: c.used_credits,
-      creditType: "PURCHASED",
-    })),
+    ...issuedCredits.map(c => {
+      const listing = getListingInfo(c.project_id);
+      return {
+        id: c.id,
+        project_id: c.project_id,
+        projectName: c.project_id ? `Project #${c.project_id}` : "Direct Issuance",
+        location: "N/A",
+        amount: c.available_credits,
+        purchaseDate: c.created_at,
+        status: c.available_credits > 0 ? "Active" : "Used",
+        type: c.credit_type,
+        value: listing ? listing.credits_for_sale * listing.price_per_credit : null,
+        retired: c.used_credits,
+        creditType: "ISSUED",
+        isListed: !!listing,
+        listingInfo: listing,
+      };
+    }),
+    ...purchasedCredits.map(c => {
+      const listing = getListingInfo(c.project_id);
+      return {
+        id: c.id,
+        project_id: c.project_id,
+        projectName: c.project_id ? `Project #${c.project_id}` : "Marketplace Purchase",
+        location: "N/A", 
+        amount: c.available_credits,
+        purchaseDate: c.created_at,
+        status: c.available_credits > 0 ? "Active" : "Used",
+        type: c.credit_type,
+        value: listing ? listing.credits_for_sale * listing.price_per_credit : null,
+        retired: c.used_credits,
+        creditType: "PURCHASED",
+        isListed: !!listing,
+        listingInfo: listing,
+      };
+    }),
   ];
 
   const totalCredits = creditSummary.total_available;
@@ -185,37 +226,26 @@ function Mycredits() {
       return;
     }
 
-    if (creditsForSale > selectedProject.amount) {
+    if (creditsForSale > selectedProject.activeCredits) {
       setError("You cannot sell more credits than you own.");
       return;
     }
 
-    try {
-      const token = localStorage.getItem("accessToken");
-      await axios.post(
-        "http://127.0.0.1:8000/api/credits/sell/",
-        {
-          project_id: selectedProject.id,
-          credits_to_sell: parseInt(creditsForSale),
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      
-      setOpenConfirmDialog(true);
-    } catch (error) {
-      console.error("Error selling credits:", error);
-      setError(error.response?.data?.error || "Failed to sell credits");
-    }
+    // Open confirmation dialog
+    setOpenConfirmDialog(true);
   };
 
   const confirmSellCredits = async () => {
+    setListingLoading(true);
+    setError("");
+    
     try {
       const token = localStorage.getItem("accessToken");
       await axios.post(
-        "http://127.0.0.1:8000/api/credits/sell/",
+        "http://127.0.0.1:8000/api/marketplace/sell/",
         {
-          project_id: selectedProject.id,
-          credits_to_sell: parseInt(creditsForSale),
+          project_id: selectedProject.project_id,
+          credits_for_sale: parseInt(creditsForSale),
           price_per_credit: parseFloat(pricePerCredit),
         },
         { headers: { Authorization: `Bearer ${token}` } }
@@ -231,8 +261,27 @@ function Mycredits() {
       setPricePerCredit("");
       setSelectedProject(null);
     } catch (error) {
-      console.error("Error confirming sell:", error);
-      setError(error.response?.data?.error || "Failed to sell credits");
+      console.error("Error creating marketplace listing:", error);
+      setError(error.response?.data?.error || "Failed to list credits on marketplace");
+    } finally {
+      setListingLoading(false);
+    }
+  };
+
+  const cancelListing = async (listingId) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      await axios.post(
+        `http://127.0.0.1:8000/api/marketplace/sell-orders/${listingId}/cancel/`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      // Refresh credits data
+      await fetchCredits();
+    } catch (error) {
+      console.error("Error cancelling listing:", error);
+      alert(error.response?.data?.error || "Failed to cancel listing");
     }
   };
 
@@ -376,6 +425,13 @@ function Mycredits() {
                               <Badge className="bg-primary/20 text-primary border-primary/30">
                                 {credit.type}
                               </Badge>
+
+                              {credit.isListed && (
+                                <Badge className="bg-emerald-100 text-emerald-700 border-emerald-500">
+                                  <Store className="w-3 h-3 mr-1" />
+                                  Listed
+                                </Badge>
+                              )}
                             </div>
 
                             <div className="flex items-center gap-4 text-sm text-muted-foreground">
@@ -411,14 +467,17 @@ function Mycredits() {
                               </p>
                             </div>
 
-                            <div className="text-center">
-                              <p className="text-sm text-muted-foreground mb-1">
-                                Value
-                              </p>
-                              <p className="text-2xl font-bold text-primary">
-                                ${credit.value.toLocaleString()}
-                              </p>
-                            </div>
+                            {/* Show Value only when listed on marketplace */}
+                            {credit.isListed && credit.value && (
+                              <div className="text-center">
+                                <p className="text-sm text-muted-foreground mb-1">
+                                  Listed Value
+                                </p>
+                                <p className="text-2xl font-bold text-emerald-600">
+                                  ${credit.value.toLocaleString()}
+                                </p>
+                              </div>
+                            )}
 
                             <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                               <Button
@@ -432,26 +491,40 @@ function Mycredits() {
                                 <Eye className="w-4 h-4" />
                                 Details
                               </Button>
-                              <Button
-                                size="sm"
-                                className="gap-2 rounded bg-linear-to-r from-red-500 to bg-red-900 text-white hover:bg-red-700 shadow-md shadow-red-500/20"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedProject({
-                                    id: credit.id,
-                                    name: credit.projectName,
-                                    activeCredits:
-                                      credit.amount - credit.retired,
-                                  });
-                                  setCreditsForSale("");
-                                  setPricePerCredit("");
-                                  setError("");
-                                  setOpenDialog(true);
-                                }}
-                              >
-                                <ArrowUpRight className="w-4 h-4" />
-                                Sell Credits
-                              </Button>
+                              
+                              {credit.isListed ? (
+                                <Button
+                                  size="sm"
+                                  className="gap-2 rounded bg-emerald-500 text-white hover:bg-emerald-600 shadow-md"
+                                  disabled
+                                >
+                                  <CheckCircle className="w-4 h-4" />
+                                  Listed
+                                </Button>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  className="gap-2 rounded bg-linear-to-r from-emerald-500 to bg-teal-600 text-white hover:bg-emerald-600 shadow-md shadow-emerald-500/20"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedProject({
+                                      id: credit.id,
+                                      project_id: credit.project_id,
+                                      name: credit.projectName,
+                                      activeCredits:
+                                        credit.amount - credit.retired,
+                                    });
+                                    setCreditsForSale("");
+                                    setPricePerCredit("");
+                                    setError("");
+                                    setOpenDialog(true);
+                                  }}
+                                  disabled={credit.amount - credit.retired <= 0}
+                                >
+                                  <Store className="w-4 h-4" />
+                                  Add to Marketplace
+                                </Button>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -619,8 +692,9 @@ function Mycredits() {
           <Dialog open={openDialog} onOpenChange={setOpenDialog}>
             <DialogContent className="bg-white/60 backdrop-blur-xl border border-white/30 shadow-2xl max-w-md">
               <DialogHeader>
-                <DialogTitle className="text-xl text-slate-900 font-bold">
-                  Sell Carbon Credits
+                <DialogTitle className="text-xl text-slate-900 font-bold flex items-center gap-2">
+                  <Store className="w-5 h-5 text-emerald-600" />
+                  Add to Marketplace
                 </DialogTitle>
                 <DialogDescription className="text-slate-600">
                   List your credits on the marketplace for sale.
@@ -656,7 +730,7 @@ function Mycredits() {
                   {/* Credits for Sale */}
                   <div className="flex flex-col gap-1">
                     <label className="text-slate-700 font-medium">
-                      Credits for Sale
+                      Credits to List
                     </label>
                     <input
                       type="number"
@@ -666,8 +740,8 @@ function Mycredits() {
                       onChange={(e) =>
                         setCreditsForSale(Number(e.target.value))
                       }
-                      className="bg-white border border-gray-300 rounded px-3 py-2 text-slate-900 focus:ring-2 focus:ring-red-400 outline-none"
-                      placeholder="Enter credits to sell"
+                      className="bg-white border border-gray-300 rounded px-3 py-2 text-slate-900 focus:ring-2 focus:ring-emerald-400 outline-none"
+                      placeholder="Enter credits to list"
                     />
                   </div>
 
@@ -683,22 +757,35 @@ function Mycredits() {
                       onChange={(e) =>
                         setPricePerCredit(Number(e.target.value))
                       }
-                      className="bg-white border border-gray-300 rounded px-3 py-2 text-slate-900 focus:ring-2 focus:ring-red-400 outline-none"
+                      className="bg-white border border-gray-300 rounded px-3 py-2 text-slate-900 focus:ring-2 focus:ring-emerald-400 outline-none"
                       placeholder="Set price"
                     />
                   </div>
+
+                  {/* Total Value Preview */}
+                  {creditsForSale > 0 && pricePerCredit > 0 && (
+                    <div className="bg-emerald-50 rounded-lg p-3 border border-emerald-200">
+                      <div className="flex justify-between items-center">
+                        <span className="text-emerald-700">Total Listing Value</span>
+                        <span className="text-xl font-bold text-emerald-700">
+                          ${(creditsForSale * pricePerCredit).toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Error */}
                   {error && (
                     <p className="text-sm text-red-600">{error}</p>
                   )}
 
-                  {/* Sell Button */}
+                  {/* List Button */}
                   <Button
-                    className="w-full rounded bg-linear-to-r from-red-500 to bg-red-900 text-white hover:bg-red-700 shadow-md shadow-red-500/20"
+                    className="w-full rounded bg-emerald-600 text-white hover:bg-emerald-700 shadow-md"
                     onClick={handleSellCredits}
                   >
-                    Sell Credits
+                    <Store className="w-4 h-4 mr-2" />
+                    List on Marketplace
                   </Button>
                 </div>
               )}
@@ -708,8 +795,9 @@ function Mycredits() {
           <Dialog open={openConfirmDialog} onOpenChange={setOpenConfirmDialog}>
             <DialogContent className="bg-white border border-slate-200 shadow-xl max-w-sm">
               <DialogHeader>
-                <DialogTitle className="text-lg font-bold text-slate-900">
-                  Confirm Sale
+                <DialogTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                  <Store className="w-5 h-5 text-emerald-600" />
+                  Confirm Listing
                 </DialogTitle>
                 <DialogDescription className="text-slate-600">
                   Please review the details before listing your credits.
@@ -726,7 +814,7 @@ function Mycredits() {
                   </div>
 
                   <div className="flex justify-between">
-                    <span className="text-slate-600">Credits for Sale</span>
+                    <span className="text-slate-600">Credits to List</span>
                     <span className="font-medium text-slate-900">
                       {creditsForSale}
                     </span>
@@ -741,27 +829,33 @@ function Mycredits() {
 
                   <div className="flex justify-between border-t pt-2 mt-2">
                     <span className="text-slate-700 font-semibold">
-                      Total Value
+                      Total Listing Value
                     </span>
-                    <span className="font-bold text-slate-900">
+                    <span className="font-bold text-emerald-600">
                       ${(creditsForSale * pricePerCredit).toLocaleString()}
                     </span>
                   </div>
 
-                  <div className="flex-col mt-4">
+                  {error && (
+                    <p className="text-sm text-red-600">{error}</p>
+                  )}
+
+                  <div className="flex gap-2 mt-4">
                     <Button
                       variant="outline"
-                      className="w-full m-1 text-slate-900 bg-slate-300 hover:bg-slate-400 "
+                      className="flex-1 text-slate-900 bg-slate-100 hover:bg-slate-200"
                       onClick={() => setOpenConfirmDialog(false)}
+                      disabled={listingLoading}
                     >
                       Cancel
                     </Button>
 
                     <Button
-                      className="w-full m-1 bg-linear-to-r from-red-500 to bg-red-900 text-white hover:bg-red-700 shadow-md shadow-red-500/20"
+                      className="flex-1 bg-emerald-600 text-white hover:bg-emerald-700"
                       onClick={confirmSellCredits}
+                      disabled={listingLoading}
                     >
-                      Confirm Sell
+                      {listingLoading ? "Listing..." : "Confirm Listing"}
                     </Button>
                   </div>
                 </div>
