@@ -107,6 +107,24 @@ function Mycredits() {
       });
 
       pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+
+      // Add clickable link for blockchain transaction if available
+      if (selectedCredit.blockchain_tx_hash) {
+        const txHash = selectedCredit.blockchain_tx_hash.startsWith('0x')
+          ? selectedCredit.blockchain_tx_hash
+          : '0x' + selectedCredit.blockchain_tx_hash;
+        const etherscanUrl = `https://sepolia.etherscan.io/tx/${txHash}`;
+
+        // Add clickable link annotation over the button area
+        // Position estimated based on rendering location
+        const linkWidth = 60;
+        const linkHeight = 15;
+        const linkX = 135; // Approximately aligned with the button column
+        const linkY = pdfHeight * 0.76; // Moved down to align with the button row
+
+        pdf.link(linkX, linkY, linkWidth, linkHeight, { url: etherscanUrl });
+      }
+
       pdf.save(`CarbonCred_Purchase_Certificate_${selectedCredit.id}.pdf`);
     } catch (error) {
       console.error("Error generating certificate:", error);
@@ -930,9 +948,20 @@ function Mycredits() {
                           <td style={{ padding: '8px 0', color: '#1e1b4b' }}>CCT (CarbonCred Token)</td>
                         </tr>
                         <tr>
-                          <td style={{ padding: '8px 0', fontWeight: '600', color: '#6366f1' }}>Verify On-Chain</td>
-                          <td style={{ padding: '8px 0', color: '#4f46e5', fontSize: '11px' }}>
-                            https://sepolia.etherscan.io/tx/{selectedCredit.blockchain_tx_hash.startsWith('0x') ? selectedCredit.blockchain_tx_hash : '0x' + selectedCredit.blockchain_tx_hash}
+                          <td style={{ padding: '8px 0', fontWeight: '600', color: '#6366f1' }}>Verification</td>
+                          <td style={{ padding: '8px 0' }}>
+                            <div style={{
+                              backgroundColor: '#4f46e5',
+                              color: 'white',
+                              padding: '8px 16px',
+                              borderRadius: '6px',
+                              fontSize: '12px',
+                              display: 'inline-block',
+                              fontWeight: '600',
+                              letterSpacing: '0.5px'
+                            }}>
+                              View on Etherscan ↗
+                            </div>
                           </td>
                         </tr>
                       </tbody>
