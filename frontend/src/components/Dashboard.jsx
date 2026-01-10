@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import Navbar from "./ui/Navbar";
@@ -48,6 +49,53 @@ const Dashboard = () => {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  // API Data State
+  const [creditSummary, setCreditSummary] = useState({
+    total_available: 0,
+    total_used: 0,
+    issued_available: 0,
+    purchased_available: 0,
+  });
+  const [projectCount, setProjectCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch dashboard data
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        navigate("/Login");
+        return;
+      }
+
+      try {
+        // Fetch credit summary
+        const creditResponse = await axios.get(
+          "http://127.0.0.1:8000/api/credits/summary/",
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setCreditSummary(creditResponse.data);
+
+        // Fetch projects count
+        const projectResponse = await axios.get(
+          "http://127.0.0.1:8000/api/projects/projects/",
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setProjectCount(projectResponse.data.length);
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+        if (error.response?.status === 401) {
+          localStorage.removeItem("accessToken");
+          navigate("/Login");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, [navigate]);
 
   const chartData = [
     { date: "Mon", credits: 12, reduction: 8.5 },
@@ -131,23 +179,23 @@ const Dashboard = () => {
               {
                 icon: Award,
                 label: "Total Credits",
-                value: "1,245",
+                value: loading ? "..." : creditSummary.total_available.toLocaleString(),
                 color: "from-green-300 to-teal-400",
                 path: "/Mycredits",
               },
               {
                 icon: FolderOpen,
                 label: "View Projects",
-                value: "8",
+                value: loading ? "..." : projectCount.toString(),
                 color: "from-teal-400 to-cyan-400",
                 path: "/ViewProjects",
               },
               {
                 icon: Wallet,
-                label: "Wallet Balance",
-                value: "850 C",
+                label: "Issued Credits",
+                value: loading ? "..." : `${creditSummary.issued_available} C`,
                 color: "from-green-400 to-teal-500",
-                path: "/wallet",
+                path: "/Mycredits",
               },
               {
                 icon: PlusCircle,

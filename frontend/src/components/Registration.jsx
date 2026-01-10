@@ -25,11 +25,13 @@ export default function CarbonLoginPage() {
     email: "",
     password: "",
     password2: "",
-    company_name: "",
-    location: "",
+    name: "",
+    registration_no: "",
+    registration_year: new Date().getFullYear(),
+    owner_name: "",
     phone: "",
-    role: "buyer", // default
-    active_since: "",
+    pan_id: "",
+    metamask_wallet_address: "",
   });
 
   const handleInputChange = (e) => {
@@ -218,8 +220,8 @@ export default function CarbonLoginPage() {
               </label>
               <input
                 type="text"
-                name="company_name"
-                value={formData.company_name}
+                name="name"
+                value={formData.name}
                 onChange={handleInputChange}
                 placeholder="Company name"
                 className="block w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500"
@@ -227,17 +229,17 @@ export default function CarbonLoginPage() {
               />
             </div>
 
-            {/* Location */}
+            {/* Registration Number */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Location
+                Registration Number
               </label>
               <input
                 type="text"
-                name="location"
-                value={formData.location}
+                name="registration_no"
+                value={formData.registration_no}
                 onChange={handleInputChange}
-                placeholder="Location"
+                placeholder="Registration number"
                 className="block w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500"
                 required
               />
@@ -259,33 +261,67 @@ export default function CarbonLoginPage() {
               />
             </div>
 
-            {/* Role */}
+            {/* Owner Name */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Role
+                Owner Name
               </label>
-              <select
-                name="role"
-                value={formData.role}
+              <input
+                type="text"
+                name="owner_name"
+                value={formData.owner_name}
                 onChange={handleInputChange}
+                placeholder="Owner name"
                 className="block w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500"
-              >
-                <option value="Credit Issuer">Credit Issuer</option>
-                <option value="Carbon Credit Buyer">Carbon Credit Buyer</option>
-              </select>
+                required
+              />
             </div>
 
-            {/* Active Since */}
+            {/* PAN ID */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                PAN ID
+              </label>
+              <input
+                type="text"
+                name="pan_id"
+                value={formData.pan_id}
+                onChange={handleInputChange}
+                placeholder="PAN ID"
+                className="block w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500"
+                required
+              />
+            </div>
+
+            {/* MetaMask Wallet Address */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                MetaMask Wallet Address
+              </label>
+              <input
+                type="text"
+                name="metamask_wallet_address"
+                value={formData.metamask_wallet_address}
+                onChange={handleInputChange}
+                placeholder="0x..."
+                className="block w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500"
+                required
+              />
+            </div>
+
+            {/* Registration Year */}
             <div className="md:col-span-2 flex flex-col items-center">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Active Since
+                Registration Year
               </label>
 
               <input
-                type="date"
-                name="active_since"
-                value={formData.active_since}
+                type="number"
+                name="registration_year"
+                value={formData.registration_year}
                 onChange={handleInputChange}
+                min="1900"
+                max={new Date().getFullYear()}
                 className="w-1/2 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500"
                 required
               />

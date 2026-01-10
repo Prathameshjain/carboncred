@@ -151,6 +151,14 @@ class ProjectViewSet(viewsets.ModelViewSet):
         
         validated_data = serializer.validated_data
         
+        # Check for duplicate project name for this user
+        project_name = validated_data.get('project_name')
+        if Project.objects.filter(user=request.user, project_name=project_name).exists():
+            return Response(
+                {'detail': f'You already have a project named "{project_name}". Please use a different name.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
         # Extract image data (not part of Project model)
         before_image = validated_data.pop('before_image', None)
         after_image = validated_data.pop('after_image', None)

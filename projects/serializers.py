@@ -208,8 +208,14 @@ class ProjectListSerializer(serializers.ModelSerializer):
             'classification',
             'final_decision',
             'confidence_score',
+            'claim_alignment',
             'estimated_co2_tco2_year',
             'credits_issued',
+            'report_id',
+            'project_area_hectares',
+            'project_cost_lakh_inr',
+            'claimed_improvement_pct',
+            'explanation',
             'created_at',
         ]
 

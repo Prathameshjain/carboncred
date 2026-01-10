@@ -7,6 +7,7 @@ import Marketplace from "./components/Marketplace";
 import Mycredits from "./components/Mycredits";
 import PurchaseHistory from "./components/PurchaseHistory";
 import AddProject from "./components/AddProject";
+import ViewProjects from "./components/ViewProjects";
 import "./App.css";
 
 function App() {
@@ -20,7 +21,8 @@ function App() {
         <Route path="/Marketplace" element={<Marketplace/>}/>
         <Route path="/Mycredits" element={<Mycredits/>}/>
         <Route path="/PurchaseHistory" element={<PurchaseHistory/>}/>
-        <Route path="/AddProject" element={<AddProject/>}/> 
+        <Route path="/AddProject" element={<AddProject/>}/>
+        <Route path="/ViewProjects" element={<ViewProjects/>}/>
       </Routes>
     </>
   );

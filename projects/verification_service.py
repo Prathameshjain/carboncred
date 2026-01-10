@@ -6,15 +6,19 @@ It handles:
 - Running ML verification on project data
 - Mapping verification results to Django model fields
 - Generating unique report IDs
+- Saving verification reports to JSON files
 """
 
 import sys
 import os
+import json
 import random
 from datetime import datetime
 from decimal import Decimal
 from typing import Dict, Any, Optional, List
 from pathlib import Path
+
+from django.conf import settings
 
 # Add ml-verification/src to Python path
 ML_VERIFICATION_PATH = Path(__file__).resolve().parent.parent / 'ml-verification' / 'src'
@@ -39,12 +43,46 @@ class ProjectVerificationService:
             self.engine = CarbonCredVerificationEngine()
         else:
             self.engine = None
+        
+        # Setup reports directory in media folder
+        self.reports_dir = Path(settings.MEDIA_ROOT) / 'reports'
+        self.reports_dir.mkdir(parents=True, exist_ok=True)
     
     def generate_report_id(self) -> str:
         """Generate a unique report ID."""
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         random_suffix = random.randint(1000, 9999)
         return f"RPT-{timestamp}-{random_suffix}"
+    
+    def save_report_to_file(self, report_id: str, verification_result: Dict[str, Any]) -> str:
+        """
+        Save verification report to JSON file in media/reports folder.
+        
+        Args:
+            report_id: Unique report identifier
+            verification_result: Full verification result dictionary
+            
+        Returns:
+            str: Path to saved JSON file (relative to MEDIA_ROOT)
+        """
+        try:
+            filename = f"{report_id}.json"
+            filepath = self.reports_dir / filename
+            
+            report_data = {
+                "report_id": report_id,
+                "generated_at": datetime.now().isoformat(),
+                "verification_result": verification_result
+            }
+            
+            with open(filepath, 'w') as f:
+                json.dump(report_data, f, indent=2, default=str)
+            
+            # Return relative path from MEDIA_ROOT
+            return f"reports/{filename}"
+        except Exception as e:
+            print(f"Warning: Failed to save report to file: {e}")
+            return None
     
     def _get_project_type_for_ml(self, classification: str) -> str:
         """
@@ -373,6 +411,11 @@ class ProjectVerificationService:
             "verification_result": verification_result
         }
         
+        # Save report to JSON file in media/reports folder
+        report_file_path = self.save_report_to_file(report_id, verification_result)
+        if report_file_path:
+            full_result["report_file_path"] = report_file_path
+        
         return full_result
     
     def _mock_verification(
@@ -504,6 +547,7 @@ class ProjectVerificationService:
             "area_hectares": Decimal(str(key_metrics.get("area_hectares", 0))) if key_metrics.get("area_hectares") else None,
             "claim_gap_pct": Decimal(str(key_metrics.get("claim_gap_pct", 0))) if key_metrics.get("claim_gap_pct") is not None else None,
             "verification_result_json": verification_response,
+            "report_file_path": verification_response.get("report_file_path"),
         }
         
         # Vegetation-specific fields

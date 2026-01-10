@@ -1,5 +1,5 @@
-import React from "react";
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import Sidebar from "./ui/Sidebar";
 import Navbar from "./ui/Navbar";
 import Footer from "./ui/Footer";
@@ -40,65 +40,101 @@ function Mycredits() {
   const [creditsForSale, setCreditsForSale] = useState("");
   const [pricePerCredit, setPricePerCredit] = useState("");
   const [error, setError] = useState("");
-  const userId = "USR_10231";
+  const [loading, setLoading] = useState(true);
+  
+  // API data states
+  const [issuedCredits, setIssuedCredits] = useState([]);
+  const [purchasedCredits, setPurchasedCredits] = useState([]);
+  const [creditSummary, setCreditSummary] = useState({
+    total_available: 0,
+    total_used: 0,
+    issued_available: 0,
+    purchased_available: 0,
+  });
 
+  // Fetch credits from API
+  useEffect(() => {
+    fetchCredits();
+  }, []);
+
+  const fetchCredits = async () => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      navigate("/Login");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Fetch credit summary
+      const summaryResponse = await axios.get(
+        "http://127.0.0.1:8000/api/credits/summary/",
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setCreditSummary(summaryResponse.data);
+
+      // Fetch issued credits
+      const issuedResponse = await axios.get(
+        "http://127.0.0.1:8000/api/credits/issued/",
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setIssuedCredits(issuedResponse.data);
+
+      // Fetch purchased credits
+      const purchasedResponse = await axios.get(
+        "http://127.0.0.1:8000/api/credits/purchased/",
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setPurchasedCredits(purchasedResponse.data);
+    } catch (error) {
+      console.error("Error fetching credits:", error);
+      if (error.response?.status === 401) {
+        localStorage.removeItem("accessToken");
+        navigate("/Login");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Combine issued and purchased credits for display
   const credits = [
-    {
-      id: 1,
-      projectName: "Amazon Rainforest Conservation",
-      location: "Brazil",
-      amount: 1500,
-      purchaseDate: "2024-01-15",
-      status: "Active",
-      type: "Forestry",
-      value: 27750,
-      retired: 0,
-    },
-    {
-      id: 2,
-      projectName: "Wind Farm Energy Project",
-      location: "Texas, USA",
-      amount: 2200,
-      purchaseDate: "2024-02-20",
-      status: "Active",
-      type: "Renewable Energy",
-      value: 34650,
-      retired: 500,
-    },
-    {
-      id: 3,
-      projectName: "Mangrove Restoration",
-      location: "Indonesia",
-      amount: 1800,
-      purchaseDate: "2024-03-10",
-      status: "Partially Retired",
-      type: "Marine Conservation",
-      value: 36000,
-      retired: 800,
-    },
-    {
-      id: 4,
-      projectName: "Solar Power Initiative",
-      location: "India",
-      amount: 3000,
-      purchaseDate: "2023-12-05",
-      status: "Active",
-      type: "Renewable Energy",
-      value: 42750,
-      retired: 0,
-    },
+    ...issuedCredits.map(c => ({
+      id: c.id,
+      projectName: c.project_id ? `Project #${c.project_id}` : "Direct Issuance",
+      location: "N/A",
+      amount: c.available_credits,
+      purchaseDate: c.created_at,
+      status: c.available_credits > 0 ? "Active" : "Used",
+      type: c.credit_type,
+      value: c.available_credits * 18.5, // Example price per credit
+      retired: c.used_credits,
+      creditType: "ISSUED",
+    })),
+    ...purchasedCredits.map(c => ({
+      id: c.id,
+      projectName: c.project_id ? `Project #${c.project_id}` : "Marketplace Purchase",
+      location: "N/A", 
+      amount: c.available_credits,
+      purchaseDate: c.created_at,
+      status: c.available_credits > 0 ? "Active" : "Used",
+      type: c.credit_type,
+      value: c.available_credits * 18.5,
+      retired: c.used_credits,
+      creditType: "PURCHASED",
+    })),
   ];
 
-  const totalCredits = credits.reduce((sum, credit) => sum + credit.amount, 0);
+  const totalCredits = creditSummary.total_available;
   const totalValue = credits.reduce((sum, credit) => sum + credit.value, 0);
-  const totalRetired = credits.reduce((sum, credit) => sum + credit.retired, 0);
-  const activeCredits = totalCredits - totalRetired;
+  const totalRetired = creditSummary.total_used;
+  const activeCredits = creditSummary.total_available;
 
   const showDetails = () => {
     setOpenDialog(true);
   };
 
-  const handleSellCredits = () => {
+  const handleSellCredits = async () => {
     setError("");
 
     if (!creditsForSale || creditsForSale <= 0) {
@@ -111,44 +147,55 @@ function Mycredits() {
       return;
     }
 
-    if (creditsForSale > selectedProject.activeCredits) {
+    if (creditsForSale > selectedProject.amount) {
       setError("You cannot sell more credits than you own.");
       return;
     }
 
-    const sellPayload = {
-      user_id: userId,
-      project_id: selectedProject.id,
-      credits: creditsForSale,
-      price_per_credit: pricePerCredit,
-    };
-
-    console.log("Sell Credits Payload:", sellPayload);
-
-    setOpenConfirmDialog(true);
+    try {
+      const token = localStorage.getItem("accessToken");
+      await axios.post(
+        "http://127.0.0.1:8000/api/credits/sell/",
+        {
+          project_id: selectedProject.id,
+          credits_to_sell: parseInt(creditsForSale),
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      setOpenConfirmDialog(true);
+    } catch (error) {
+      console.error("Error selling credits:", error);
+      setError(error.response?.data?.error || "Failed to sell credits");
+    }
   };
 
-  const confirmSellCredits = () => {
-    const sellPayload = {
-      user_id: userId,
-      project_id: selectedProject.id,
-      credits: creditsForSale,
-      price_per_credit: pricePerCredit,
-    };
+  const confirmSellCredits = async () => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      await axios.post(
+        "http://127.0.0.1:8000/api/credits/sell/",
+        {
+          project_id: selectedProject.id,
+          credits_to_sell: parseInt(creditsForSale),
+          price_per_credit: parseFloat(pricePerCredit),
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-    console.log("FINAL SELL PAYLOAD:", sellPayload);
+      // Refresh credits data
+      await fetchCredits();
 
-    // Later:
-    // 1. Send payload to backend
-    // 2. Create marketplace listing
-    // 3. Lock credits / escrow
-
-    // Reset everything
-    setOpenConfirmDialog(false);
-    setOpenDialog(false);
-    setCreditsForSale("");
-    setPricePerCredit("");
-    setSelectedProject(null);
+      // Reset everything
+      setOpenConfirmDialog(false);
+      setOpenDialog(false);
+      setCreditsForSale("");
+      setPricePerCredit("");
+      setSelectedProject(null);
+    } catch (error) {
+      console.error("Error confirming sell:", error);
+      setError(error.response?.data?.error || "Failed to sell credits");
+    }
   };
 
   return (

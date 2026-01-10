@@ -154,6 +154,9 @@ class Project(models.Model):
     # ========== FULL VERIFICATION JSON ==========
     # Store the complete verification result JSON for reference
     verification_result_json = models.JSONField(null=True, blank=True)
+    
+    # Path to saved JSON report file (relative to MEDIA_ROOT)
+    report_file_path = models.CharField(max_length=255, null=True, blank=True)
 
     # ========== TIMESTAMPS ==========
     created_at = models.DateTimeField(auto_now_add=True)
