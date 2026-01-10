@@ -13,14 +13,13 @@ import {
   Users,
   TrendingUp,
   Award,
-  TreePine,
-  Droplet,
-  Wind,
-  Lock,
-  CheckCircle,
+  ArrowUpRight,
+  ArrowDownLeft,
   FolderOpen,
   ArrowRight,
-  PlusCircle
+  PlusCircle,
+  RefreshCw,
+  Clock,
 } from "lucide-react";
 import {
   Card,
@@ -40,6 +39,8 @@ import {
   ResponsiveContainer,
   AreaChart,
   Area,
+  BarChart,
+  Bar,
 } from "recharts";
 import Footer from "./ui/Footer";
 
@@ -58,6 +59,8 @@ const Dashboard = () => {
     purchased_available: 0,
   });
   const [projectCount, setProjectCount] = useState(0);
+  const [recentTransactions, setRecentTransactions] = useState([]);
+  const [userId, setUserId] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // Fetch dashboard data
@@ -67,6 +70,14 @@ const Dashboard = () => {
       if (!token) {
         navigate("/Login");
         return;
+      }
+
+      // Get user ID from token
+      try {
+        const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+        setUserId(parseInt(tokenPayload.user_id || tokenPayload.sub, 10));
+      } catch (e) {
+        console.error("Error parsing token:", e);
       }
 
       try {
@@ -83,6 +94,13 @@ const Dashboard = () => {
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setProjectCount(projectResponse.data.length);
+
+        // Fetch recent transactions
+        const transactionResponse = await axios.get(
+          "http://127.0.0.1:8000/api/transactions/my/",
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setRecentTransactions(transactionResponse.data.slice(0, 5)); // Get last 5
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
         if (error.response?.status === 401) {
@@ -97,50 +115,35 @@ const Dashboard = () => {
     fetchDashboardData();
   }, [navigate]);
 
+  // Generate chart data from credit summary
   const chartData = [
-    { date: "Mon", credits: 12, reduction: 8.5 },
-    { date: "Tue", credits: 19, reduction: 12.3 },
-    { date: "Wed", credits: 15, reduction: 10.1 },
-    { date: "Thu", credits: 28, reduction: 18.7 },
-    { date: "Fri", credits: 35, reduction: 22.4 },
-    { date: "Sat", credits: 42, reduction: 28.5 },
-    { date: "Sun", credits: 38, reduction: 25.2 },
+    { name: "Issued", credits: creditSummary.issued_available, fill: "#4CAF50" },
+    { name: "Purchased", credits: creditSummary.purchased_available, fill: "#36C2B4" },
+    { name: "Used", credits: creditSummary.total_used, fill: "#94a3b8" },
   ];
 
-  const activities = [
-    {
-      icon: TreePine,
-      action: "Planted a tree",
-      credits: "+20",
-      color: "from-green-400 to-teal-400",
-    },
-    {
-      icon: Droplet,
-      action: "Reduced water usage",
-      credits: "+12",
-      color: "from-blue-400 to-cyan-400",
-    },
-    {
-      icon: Wind,
-      action: "Joined cleanup drive",
-      credits: "+35",
-      color: "from-teal-400 to-emerald-400",
-    },
-    {
-      icon: Zap,
-      action: "Used renewable energy",
-      credits: "+18",
-      color: "from-yellow-400 to-amber-400",
-    },
-  ];
+  // Helper to determine transaction type
+  const getTransactionType = (transaction) => {
+    const buyerId = parseInt(transaction.buyer_id, 10);
+    if (buyerId === userId) return "PURCHASE";
+    return "SALE";
+  };
 
-  const menuItems = [
-    { icon: Home, label: "Dashboard", path: "/Dashboard" },
-    { icon: Zap, label: "Activities", path: "/activities" },
-    { icon: ShoppingCart, label: "Marketplace", path: "/Marketplace" },
-    { icon: Wallet, label: "Wallet", path: "/wallet" },
-    { icon: Users, label: "Community", path: "/community" },
-  ];
+  // Format date
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return "Just now";
+    if (diffMins < 60) return `${diffMins} min ago`;
+    if (diffHours < 24) return `${diffHours} hours ago`;
+    if (diffDays < 7) return `${diffDays} days ago`;
+    return date.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
+  };
 
   return (
     <div
@@ -173,34 +176,20 @@ const Dashboard = () => {
             </p>
           </div>
 
-          {/* Quick Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          {/* Quick Action Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {[
-              {
-                icon: Award,
-                label: "Total Credits",
-                value: loading ? "..." : creditSummary.total_available.toLocaleString(),
-                color: "from-green-300 to-teal-400",
-                path: "/Mycredits",
-              },
               {
                 icon: FolderOpen,
                 label: "View Projects",
-                value: loading ? "..." : projectCount.toString(),
+                description: "Track your submitted projects",
                 color: "from-teal-400 to-cyan-400",
                 path: "/ViewProjects",
               },
               {
-                icon: Wallet,
-                label: "Issued Credits",
-                value: loading ? "..." : `${creditSummary.issued_available} C`,
-                color: "from-green-400 to-teal-500",
-                path: "/Mycredits",
-              },
-              {
                 icon: PlusCircle,
                 label: "Add Project",
-                value: "+1",
+                description: "Submit a new project for verification",
                 color: "from-blue-400 to-cyan-500",
                 path: "/AddProject",
               },
@@ -208,238 +197,244 @@ const Dashboard = () => {
               <button
                 key={idx}
                 onClick={() => navigate(stat.path)}
-                className="group relative overflow-hidden rounded backdrop-blur-xl bg-linear-to-br from-white/60 to-white/40 border border-white/30 p-6 hover:border-white/50 transition-all shadow-lg hover:shadow-2xl cursor-pointer text-left"
+                className="group relative overflow-hidden rounded-xl backdrop-blur-xl bg-linear-to-br from-white/60 to-white/40 border border-white/30 p-6 hover:border-white/50 transition-all shadow-lg hover:shadow-2xl cursor-pointer text-left"
               >
                 <div className="absolute inset-0 bg-linear-to-br opacity-0 group-hover:opacity-5 transition-opacity" />
-                <div className={`w-12 h-12 rounded-xl bg-linear-to-br ${stat.color} shadow-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-                  <stat.icon size={24} className="text-white" />
+                <div className="flex items-center gap-4">
+                  <div className={`w-14 h-14 rounded-xl bg-linear-to-br ${stat.color} shadow-lg flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                    <stat.icon size={28} className="text-white" />
+                  </div>
+                  <div>
+                    <p className="text-lg font-bold text-slate-900">{stat.label}</p>
+                    <p className="text-sm text-slate-500">{stat.description}</p>
+                  </div>
                 </div>
-                <p className="text-sm font-medium text-slate-600 mb-1">{stat.label}</p>
-                <p className="text-3xl font-bold bg-linear-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">{stat.value}</p>
               </button>
             ))}
           </div>
 
           {/* Main Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Carbon Footprint Chart */}
+            {/* Credit Distribution Chart */}
             <div className="lg:col-span-2 rounded-lg backdrop-blur-xl bg-linear-to-br from-white/60 to-white/40 border border-white/30 p-8 shadow-lg hover:border-white/50 transition-all">
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h2 className="text-2xl font-bold text-slate-900 mb-1">
-                    Carbon Impact Trend
+                    Credit Distribution
                   </h2>
-                  <p className="text-sm text-slate-600">Your weekly progress</p>
+                  <p className="text-sm text-slate-600">Your carbon credits breakdown</p>
                 </div>
-                <select className="px-4 py-2 bg-white/40 border border-white/20 rounded-lg text-sm font-medium text-slate-700 hover:bg-white/60 transition-colors cursor-pointer">
-                  <option>Weekly</option>
-                  <option>Monthly</option>
-                  <option>Yearly</option>
-                </select>
               </div>
               <ResponsiveContainer width="100%" height={300}>
-                <AreaChart
+                <BarChart
                   data={chartData}
                   margin={{ top: 10, right: 30, left: 0, bottom: 10 }}
                 >
-                  <defs>
-                    <linearGradient
-                      id="colorReduction"
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop offset="5%" stopColor="#36C2B4" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#36C2B4" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
                   <CartesianGrid
                     strokeDasharray="3 3"
-                    stroke="rgba(255,255,255,0.1)"
+                    stroke="rgba(0,0,0,0.1)"
                   />
                   <XAxis
-                    dataKey="date"
+                    dataKey="name"
                     stroke="#94a3b8"
                     style={{ fontSize: "12px" }}
                   />
                   <YAxis stroke="#94a3b8" style={{ fontSize: "12px" }} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: "rgba(255, 255, 255, 0.9)",
-                      border: "1px solid rgba(255, 255, 255, 0.3)",
+                      backgroundColor: "rgba(255, 255, 255, 0.95)",
+                      border: "1px solid rgba(0, 0, 0, 0.1)",
                       borderRadius: "12px",
-                      backdropFilter: "blur(10px)",
                     }}
+                    formatter={(value) => [`${value} Credits`, "Amount"]}
                   />
-                  <Area
-                    type="monotone"
-                    dataKey="reduction"
-                    stroke="#36C2B4"
-                    strokeWidth={3}
-                    fillOpacity={1}
-                    fill="url(#colorReduction)"
+                  <Bar
+                    dataKey="credits"
+                    fill="#36C2B4"
+                    radius={[8, 8, 0, 0]}
                   />
-                </AreaChart>
+                </BarChart>
               </ResponsiveContainer>
             </div>
 
-            {/* Profile Completion */}
+            {/* Quick Stats Summary */}
             <div className="space-y-6">
-              <div className="rounded-lg backdrop-blur-xl bg-gradient-to-br from-white/60 to-white/40 border border-white/30 p-8 shadow-lg">
-                <h3 className="text-lg font-bold text-slate-900 mb-6">
-                  Profile Completion
+              <div className="rounded-lg backdrop-blur-xl bg-gradient-to-br from-white/60 to-white/40 border border-white/30 p-6 shadow-lg">
+                <h3 className="text-lg font-bold text-slate-900 mb-4">
+                  Credits Summary
                 </h3>
-                <div className="flex justify-center mb-6">
-                  <div className="relative w-32 h-32">
-                    <svg className="w-32 h-32 transform -rotate-90">
-                      <circle
-                        cx="64"
-                        cy="64"
-                        r="56"
-                        fill="none"
-                        stroke="rgba(255,255,255,0.3)"
-                        strokeWidth="8"
-                      />
-                      <circle
-                        cx="64"
-                        cy="64"
-                        r="56"
-                        fill="none"
-                        stroke="url(#grad1)"
-                        strokeWidth="8"
-                        strokeDasharray={`${351.86 * 0.75} 351.86`}
-                        strokeLinecap="round"
-                      />
-                      <defs>
-                        <linearGradient
-                          id="grad1"
-                          x1="0%"
-                          y1="0%"
-                          x2="100%"
-                          y2="100%"
-                        >
-                          <stop offset="0%" stopColor="#4CAF50" />
-                          <stop offset="100%" stopColor="#36C2B4" />
-                        </linearGradient>
-                      </defs>
-                    </svg>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-3xl font-bold text-slate-900">
-                        75%
-                      </span>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-emerald-50">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-emerald-500 flex items-center justify-center">
+                        <Award size={20} className="text-white" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-slate-600">Total Available</p>
+                        <p className="text-xl font-bold text-slate-900">{creditSummary.total_available}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="space-y-3">
-                  {[
-                    { label: "Email Verified", done: true },
-                    { label: "Photo Added", done: true },
-                    { label: "Phone Verified", done: true },
-                    { label: "Identity Verified", done: false },
-                  ].map((item, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/40 transition-colors"
-                    >
-                      {item.done ? (
-                        <CheckCircle
-                          size={18}
-                          className="text-green-500 flex-shrink-0"
-                        />
-                      ) : (
-                        <Lock
-                          size={18}
-                          className="text-slate-400 flex-shrink-0"
-                        />
-                      )}
-                      <span
-                        className={`text-sm ${
-                          item.done
-                            ? "text-slate-700 font-medium"
-                            : "text-slate-500"
-                        }`}
-                      >
-                        {item.label}
-                      </span>
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-teal-50">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-teal-500 flex items-center justify-center">
+                        <Zap size={20} className="text-white" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-slate-600">Issued</p>
+                        <p className="text-xl font-bold text-slate-900">{creditSummary.issued_available}</p>
+                      </div>
                     </div>
-                  ))}
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-cyan-50">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-cyan-500 flex items-center justify-center">
+                        <ShoppingCart size={20} className="text-white" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-slate-600">Purchased</p>
+                        <p className="text-xl font-bold text-slate-900">{creditSummary.purchased_available}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-slate-100">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-slate-500 flex items-center justify-center">
+                        <Target size={20} className="text-white" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-slate-600">Used/Retired</p>
+                        <p className="text-xl font-bold text-slate-900">{creditSummary.total_used}</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Activities & Community */}
+          {/* Recent Transactions */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Recent Activities */}
             <div className="lg:col-span-2 rounded-lg backdrop-blur-lg bg-gradient-to-br from-white/60 to-white/40 border border-white/30 p-8 shadow-lg">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-slate-900">
-                  Recent Activities
+                  Recent Transactions
                 </h2>
-                <button className="text-teal-600 hover:text-teal-700 font-semibold text-sm flex items-center gap-1">
+                <button 
+                  onClick={() => navigate("/PurchaseHistory")}
+                  className="text-teal-600 hover:text-teal-700 font-semibold text-sm flex items-center gap-1"
+                >
                   View All <ArrowRight size={16} />
                 </button>
               </div>
               <div className="space-y-4">
-                {activities.map((activity, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center gap-4 p-4 rounded-xl hover:bg-white/40 transition-colors group cursor-pointer"
-                  >
-                    <div
-                      className={`w-12 h-12 rounded-xl bg-gradient-to-br ${activity.color} flex items-center justify-center shadow-md group-hover:scale-110 transition-transform`}
-                    >
-                      <activity.icon size={20} className="text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-semibold text-slate-900">
-                        {activity.action}
-                      </p>
-                      <p className="text-xs text-slate-500">Today at 2:45 PM</p>
-                    </div>
-                    <span className="font-bold text-teal-600 text-lg">
-                      {activity.credits}
-                    </span>
+                {recentTransactions.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Clock size={48} className="mx-auto text-slate-300 mb-3" />
+                    <p className="text-slate-500">No transactions yet</p>
+                    <p className="text-sm text-slate-400">Your transaction history will appear here</p>
                   </div>
-                ))}
+                ) : (
+                  recentTransactions.map((transaction) => {
+                    const txType = getTransactionType(transaction);
+                    const isBuyer = txType === "PURCHASE";
+                    return (
+                      <div
+                        key={transaction.id}
+                        className="flex items-center gap-4 p-4 rounded-xl hover:bg-white/40 transition-colors group cursor-pointer"
+                      >
+                        <div
+                          className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform ${
+                            isBuyer 
+                              ? "bg-gradient-to-br from-red-400 to-rose-500" 
+                              : "bg-gradient-to-br from-emerald-400 to-teal-500"
+                          }`}
+                        >
+                          {isBuyer ? (
+                            <ArrowUpRight size={20} className="text-white" />
+                          ) : (
+                            <ArrowDownLeft size={20} className="text-white" />
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-semibold text-slate-900">
+                            {isBuyer ? "Purchased from" : "Sold to"} {isBuyer ? transaction.seller_username : transaction.buyer_username}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {transaction.project_name || `Project #${transaction.project_id}`} • {formatDate(transaction.timestamp)}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <span className={`font-bold text-lg ${isBuyer ? "text-red-600" : "text-emerald-600"}`}>
+                            {isBuyer ? "-" : "+"}${parseFloat(transaction.total_amount || 0).toFixed(2)}
+                          </span>
+                          <p className="text-xs text-slate-500">{transaction.credits_transferred} credits</p>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </div>
 
-            {/* Leaderboard */}
-            <Card className="bg-gradient-to-br backdrop-blur-2xl from-white/60 to-white/40 border border-white/30 p-8 shadow-lg">
+            {/* Quick Actions */}
+            <Card className="bg-gradient-to-br backdrop-blur-2xl from-white/60 to-white/40 border border-white/30 p-4 shadow-lg">
               <CardHeader>
-                <CardTitle>Market Overview</CardTitle>
+                <CardTitle>Quick Actions</CardTitle>
                 <CardDescription>
-                  Current carbon credit market trends
+                  Common tasks and shortcuts
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center p-3 rounded-lg bg-muted/30">
-                    <span className="text-sm text-muted-foreground">
-                      Average Price
-                    </span>
-                    <span className="text-lg font-bold text-success">
-                      $18.50
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 rounded-lg bg-muted/30">
-                    <span className="text-sm text-muted-foreground">
-                      24h Volume
-                    </span>
-                    <span className="text-lg font-bold text-foreground">
-                      125,400
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 rounded-lg bg-muted/30">
-                    <span className="text-sm text-muted-foreground">
-                      Market Trend
-                    </span>
-                    <span className="text-lg font-bold text-primary flex items-center gap-1">
-                      <TrendingUp className="w-4 h-4" /> +5.2%
-                    </span>
-                  </div>
+                <div className="space-y-3">
+                  <button
+                    onClick={() => navigate("/AddProject")}
+                    className="w-full flex items-center gap-3 p-3 rounded-lg bg-emerald-50 hover:bg-emerald-100 transition-colors text-left"
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-emerald-500 flex items-center justify-center">
+                      <PlusCircle size={20} className="text-white" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-slate-900">Add New Project</p>
+                      <p className="text-xs text-slate-500">Submit for verification</p>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => navigate("/Marketplace")}
+                    className="w-full flex items-center gap-3 p-3 rounded-lg bg-teal-50 hover:bg-teal-100 transition-colors text-left"
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-teal-500 flex items-center justify-center">
+                      <ShoppingCart size={20} className="text-white" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-slate-900">Browse Marketplace</p>
+                      <p className="text-xs text-slate-500">Buy carbon credits</p>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => navigate("/Mycredits")}
+                    className="w-full flex items-center gap-3 p-3 rounded-lg bg-cyan-50 hover:bg-cyan-100 transition-colors text-left"
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-cyan-500 flex items-center justify-center">
+                      <Wallet size={20} className="text-white" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-slate-900">My Credits</p>
+                      <p className="text-xs text-slate-500">Manage your portfolio</p>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => navigate("/ViewProjects")}
+                    className="w-full flex items-center gap-3 p-3 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors text-left"
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center">
+                      <FolderOpen size={20} className="text-white" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-slate-900">View Projects</p>
+                      <p className="text-xs text-slate-500">Track project status</p>
+                    </div>
+                  </button>
                 </div>
               </CardContent>
             </Card>

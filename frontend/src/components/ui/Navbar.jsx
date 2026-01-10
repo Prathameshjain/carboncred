@@ -1,6 +1,6 @@
 import React from "react";
 import GradientBg from '../../assets/GradientBg.png';
-import { Menu, Bell, User, ChevronDown, Settings, LogOut, Search,Leaf } from "lucide-react";
+import { Menu, Bell, User, ChevronDown, Settings, LogOut, Leaf } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -41,15 +41,6 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
                 </span>
               </div>
             </Link>
-          </div>
-
-          <div className="hidden md:flex items-center gap-2 flex-1 max-w-xs mx-8">
-            <Search size={18} className="text-slate-400 ml-3" />
-            <input
-              type="text"
-              placeholder="Search activities..."
-              className="w-full bg-white/40 border border-white/20 rounded-xl px-4 py-2 text-sm placeholder-slate-400 focus:outline-none focus:bg-white/60 transition-all"
-            />
           </div>
 
           <div className="flex items-center gap-3">

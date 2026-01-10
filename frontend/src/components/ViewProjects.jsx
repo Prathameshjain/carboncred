@@ -188,51 +188,50 @@ const ViewProjects = () => {
               {projects.map((project) => (
                 <div
                   key={project.id}
-                  className="bg-white rounded-lg shadow-sm border border-slate-200 p-5 hover:shadow-md transition cursor-pointer"
+                  className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 hover:shadow-lg transition-all cursor-pointer"
                   onClick={() => setSelectedProject(project)}
                 >
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <h3 className="font-semibold text-slate-800 text-lg">
-                        {project.project_name}
-                      </h3>
-                      <p className="text-xs text-slate-500">
-                        {new Date(project.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                    {getStatusBadge(project.final_decision)}
-                  </div>
+                  {/* Header - Project Name */}
+                  <h3 className="font-bold text-slate-900 text-xl mb-1 text-center">
+                    {project.project_name}
+                  </h3>
+                  <p className="text-xs text-slate-500 mb-3 text-center">
+                    {new Date(project.created_at).toLocaleDateString()}
+                  </p>
 
-                  <div className="flex items-center gap-2 mb-3">
+                  {/* Status and Type Badges */}
+                  <div className="flex items-center gap-2 mb-4 flex-wrap">
+                    {getStatusBadge(project.final_decision)}
                     <Badge className={getClassificationColor(project.classification)}>
                       {project.classification}
                     </Badge>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div>
-                      <p className="text-slate-500 text-xs">Confidence</p>
-                      <p className="font-medium text-slate-700">
+                  {/* Metrics Grid */}
+                  <div className="grid grid-cols-2 gap-4 pt-3 border-t border-slate-100">
+                    <div className="text-left">
+                      <p className="text-xs text-slate-500 mb-1">Confidence</p>
+                      <p className="font-semibold text-slate-800">
                         {project.confidence_score
                           ? `${(parseFloat(project.confidence_score) * 100).toFixed(1)}%`
                           : "N/A"}
                       </p>
                     </div>
-                    <div>
-                      <p className="text-slate-500 text-xs">Est. CO₂</p>
-                      <p className="font-medium text-slate-700">
+                    <div className="text-left">
+                      <p className="text-xs text-slate-500 mb-1">Est. CO₂</p>
+                      <p className="font-semibold text-slate-800">
                         {project.estimated_co2_tco2_year || "N/A"} tCO₂/yr
                       </p>
                     </div>
-                    <div>
-                      <p className="text-slate-500 text-xs">Credits Issued</p>
-                      <p className="font-medium text-emerald-600">
+                    <div className="text-left">
+                      <p className="text-xs text-slate-500 mb-1">Credits Issued</p>
+                      <p className="font-semibold text-emerald-600">
                         {project.credits_issued || 0}
                       </p>
                     </div>
-                    <div>
-                      <p className="text-slate-500 text-xs">Report ID</p>
-                      <p className="font-medium text-slate-700 text-xs truncate">
+                    <div className="text-left">
+                      <p className="text-xs text-slate-500 mb-1">Report ID</p>
+                      <p className="font-semibold text-slate-700 text-sm truncate" title={project.report_id || "Pending"}>
                         {project.report_id || "Pending"}
                       </p>
                     </div>
@@ -242,7 +241,7 @@ const ViewProjects = () => {
             </div>
           )}
 
-          {/* Project Detail Modal with PDF-style Report */}
+          {/* Project Verification Report Modal */}
           {selectedProject && (
             <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
               <div className="bg-slate-100 rounded-xl max-w-4xl w-full max-h-[95vh] overflow-hidden flex flex-col shadow-2xl">
