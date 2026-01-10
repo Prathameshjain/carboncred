@@ -88,13 +88,44 @@ class CreateSellOrderView(APIView):
             status='ACTIVE'
         )
 
+        # === BLOCKCHAIN INTEGRATION ===
+        blockchain_tx_hash = None
+        try:
+            from blockchain.services import blockchain_service, BLOCKCHAIN_ENABLED
+            
+            if BLOCKCHAIN_ENABLED and hasattr(request.user, 'profile') and request.user.profile.metamask_wallet_address:
+                # Convert price to wei (assuming price is in INR, use a simple conversion)
+                price_in_wei = int(float(price_per_credit) * 1e18)  # Simplified
+                
+                blockchain_tx_hash = blockchain_service.create_sell_order(
+                    order_id=sell_order.id,
+                    seller_wallet=request.user.profile.metamask_wallet_address,
+                    credits=credits_to_sell,
+                    price_per_credit=price_in_wei,
+                    project_id=project.id
+                )
+                
+                # Store tx hash if model supports it
+                if blockchain_tx_hash and hasattr(sell_order, 'blockchain_tx_hash'):
+                    sell_order.blockchain_tx_hash = blockchain_tx_hash
+                    sell_order.save(update_fields=['blockchain_tx_hash'])
+                    
+        except ImportError:
+            pass  # Blockchain module not available
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Blockchain sell order creation failed: {e}")
+
         return Response(
             {
                 'message': 'Sell order created successfully',
-                'sell_order_id': sell_order.id
+                'sell_order_id': sell_order.id,
+                'blockchain_tx_hash': blockchain_tx_hash
             },
             status=status.HTTP_201_CREATED
         )
+
 
 
 # 2️⃣ LIST ACTIVE SELL ORDERS
@@ -157,7 +188,7 @@ class BuyFromSellOrderView(APIView):
             used_credits=0
         )
 
-        Transaction.objects.create(
+        tx_record = Transaction.objects.create(
             sell_order=sell_order,
             project=sell_order.project,
             seller=sell_order.seller,
@@ -165,8 +196,35 @@ class BuyFromSellOrderView(APIView):
             credits_transferred=credits_to_buy
         )
 
+        # === BLOCKCHAIN INTEGRATION ===
+        blockchain_tx_hash = None
+        try:
+            from blockchain.services import blockchain_service, BLOCKCHAIN_ENABLED
+            
+            if BLOCKCHAIN_ENABLED and hasattr(buyer, 'profile') and buyer.profile.metamask_wallet_address:
+                blockchain_tx_hash = blockchain_service.execute_purchase(
+                    order_id=sell_order.id,
+                    buyer_wallet=buyer.profile.metamask_wallet_address,
+                    credits_to_buy=credits_to_buy
+                )
+                
+                # Store tx hash if model supports it
+                if blockchain_tx_hash and hasattr(tx_record, 'blockchain_tx_hash'):
+                    tx_record.blockchain_tx_hash = blockchain_tx_hash
+                    tx_record.save(update_fields=['blockchain_tx_hash'])
+                    
+        except ImportError:
+            pass
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Blockchain purchase execution failed: {e}")
+
         return Response(
-            {'message': 'Credits purchased successfully'},
+            {
+                'message': 'Credits purchased successfully',
+                'blockchain_tx_hash': blockchain_tx_hash
+            },
             status=status.HTTP_200_OK
         )
 
@@ -205,7 +263,27 @@ class CancelSellOrderView(APIView):
         sell_order.status = 'CANCELLED'
         sell_order.save()
 
+        # === BLOCKCHAIN INTEGRATION ===
+        blockchain_tx_hash = None
+        try:
+            from blockchain.services import blockchain_service, BLOCKCHAIN_ENABLED
+            
+            if BLOCKCHAIN_ENABLED:
+                blockchain_tx_hash = blockchain_service.cancel_sell_order(
+                    order_id=sell_order.id
+                )
+                    
+        except ImportError:
+            pass
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Blockchain sell order cancellation failed: {e}")
+
         return Response(
-            {'message': 'Sell order cancelled and credits returned'},
+            {
+                'message': 'Sell order cancelled and credits returned',
+                'blockchain_tx_hash': blockchain_tx_hash
+            },
             status=status.HTTP_200_OK
         )

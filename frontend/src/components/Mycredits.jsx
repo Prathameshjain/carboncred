@@ -26,6 +26,8 @@ import {
   Store,
   CheckCircle,
   ShoppingCart,
+  ExternalLink,
+  Link,
 } from "lucide-react";
 import {
   Card,
@@ -57,7 +59,7 @@ function Mycredits() {
   const [userId, setUserId] = useState(null);
   const [listingLoading, setListingLoading] = useState(false);
   const [downloadingCertificate, setDownloadingCertificate] = useState(false);
-  
+
   // API data states
   const [issuedCredits, setIssuedCredits] = useState([]);
   const [purchasedCredits, setPurchasedCredits] = useState([]);
@@ -72,7 +74,7 @@ function Mycredits() {
   // Download Purchase Certificate as PDF
   const downloadPurchaseCertificate = async () => {
     if (!purchaseCertificateRef.current || !selectedCredit) return;
-    
+
     setDownloadingCertificate(true);
     try {
       const element = purchaseCertificateRef.current;
@@ -203,6 +205,8 @@ function Mycredits() {
         creditType: "ISSUED",
         isListed: !!listing,
         listingInfo: listing,
+        blockchain_minted: c.blockchain_minted,
+        blockchain_tx_hash: c.blockchain_tx_hash,
       };
     }),
     ...purchasedCredits.map(c => {
@@ -222,6 +226,8 @@ function Mycredits() {
         creditType: "PURCHASED",
         isListed: !!listing,
         listingInfo: listing,
+        blockchain_minted: c.blockchain_minted,
+        blockchain_tx_hash: c.blockchain_tx_hash,
       };
     }),
   ];
@@ -298,7 +304,7 @@ function Mycredits() {
   const confirmSellCredits = async () => {
     setListingLoading(true);
     setError("");
-    
+
     try {
       const token = localStorage.getItem("accessToken");
       await axios.post(
@@ -336,7 +342,7 @@ function Mycredits() {
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      
+
       // Refresh credits data
       await fetchCredits();
     } catch (error) {
@@ -356,9 +362,8 @@ function Mycredits() {
       {/* MAIN LAYOUT */}
       <div className="flex pt-24 relative">
         <aside
-          className={`transition-all duration-300 ${
-            sidebarOpen ? "w-64" : "w-0"
-          }`}
+          className={`transition-all duration-300 ${sidebarOpen ? "w-64" : "w-0"
+            }`}
         >
           {/* SIDEBAR */}
           <div className="sticky top-24 h-[calc(100vh-6rem)]">
@@ -552,7 +557,7 @@ function Mycredits() {
                                 <Eye className="w-4 h-4" />
                                 Details
                               </Button>
-                              
+
                               {credit.isListed ? (
                                 <Button
                                   size="sm"
@@ -603,14 +608,14 @@ function Mycredits() {
 
           {/* Credit Details Dialog */}
           <Dialog open={openDetailsDialog} onOpenChange={setOpenDetailsDialog}>
-            <DialogContent className="bg-white/95 backdrop-blur-xl border border-white/30 shadow-2xl max-w-lg">
+            <DialogContent className="bg-white/95 backdrop-blur-xl border border-white/30 shadow-2xl max-w-lg max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="text-xl text-slate-900 font-bold flex items-center gap-2">
                   <Award className="w-5 h-5 text-emerald-600" />
                   {selectedCredit?.creditType === "PURCHASED" ? "Purchased Credit Details" : "Credit Details"}
                 </DialogTitle>
                 <DialogDescription className="text-slate-600">
-                  {selectedCredit?.creditType === "PURCHASED" 
+                  {selectedCredit?.creditType === "PURCHASED"
                     ? "View details of your marketplace purchase."
                     : "View detailed information about this credit."}
                 </DialogDescription>
@@ -689,8 +694,8 @@ function Mycredits() {
                     <div className="flex justify-between items-center">
                       <span className="text-slate-600">Credit Type</span>
                       <Badge className={
-                        selectedCredit.creditType === "ISSUED" 
-                          ? "bg-emerald-100 text-emerald-700" 
+                        selectedCredit.creditType === "ISSUED"
+                          ? "bg-emerald-100 text-emerald-700"
                           : "bg-blue-100 text-blue-700"
                       }>
                         {selectedCredit.creditType === "PURCHASED" ? "PURCHASED" : "ISSUED"}
@@ -699,8 +704,8 @@ function Mycredits() {
                     <div className="flex justify-between items-center">
                       <span className="text-slate-600">Status</span>
                       <Badge className={
-                        selectedCredit.status === "Active" 
-                          ? "bg-green-100 text-green-700" 
+                        selectedCredit.status === "Active"
+                          ? "bg-green-100 text-green-700"
                           : "bg-gray-100 text-gray-700"
                       }>
                         {selectedCredit.status}
@@ -760,6 +765,37 @@ function Mycredits() {
                     </div>
                   )}
 
+                  {/* Blockchain Record Section */}
+                  {selectedCredit.blockchain_tx_hash && (
+                    <div className="bg-indigo-50 rounded-lg p-4 border border-indigo-200">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Link className="w-4 h-4 text-indigo-600" />
+                        <p className="text-sm font-semibold text-indigo-700">Blockchain Record</p>
+                      </div>
+                      <div className="space-y-3 text-sm">
+                        <div>
+                          <p className="text-indigo-600 mb-1">Transaction Hash</p>
+                          <p className="font-mono text-xs text-indigo-800 bg-indigo-100 px-2 py-1 rounded" title={selectedCredit.blockchain_tx_hash}>
+                            {selectedCredit.blockchain_tx_hash.slice(0, 10)}...{selectedCredit.blockchain_tx_hash.slice(-8)}
+                          </p>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-indigo-600">Network</span>
+                          <Badge className="bg-indigo-100 text-indigo-700">Sepolia</Badge>
+                        </div>
+                        <a
+                          href={`https://sepolia.etherscan.io/tx/${selectedCredit.blockchain_tx_hash.startsWith('0x') ? selectedCredit.blockchain_tx_hash : '0x' + selectedCredit.blockchain_tx_hash}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center gap-2 w-full px-3 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 transition"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                          View on Etherscan
+                        </a>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Action Buttons */}
                   <div className="flex gap-2">
                     {selectedCredit.creditType === "PURCHASED" && (
@@ -787,10 +823,10 @@ function Mycredits() {
           {/* Hidden Purchase Certificate for PDF Generation */}
           {selectedCredit && selectedCredit.creditType === "PURCHASED" && (
             <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
-              <div 
+              <div
                 ref={purchaseCertificateRef}
-                style={{ 
-                  width: '800px', 
+                style={{
+                  width: '800px',
                   padding: '40px',
                   backgroundColor: '#ffffff',
                   fontFamily: 'Arial, sans-serif'
@@ -849,7 +885,7 @@ function Mycredits() {
                       <tr style={{ borderBottom: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }}>
                         <td style={{ padding: '12px', fontWeight: '600', color: '#475569' }}>Status</td>
                         <td style={{ padding: '12px' }}>
-                          <span style={{ 
+                          <span style={{
                             backgroundColor: selectedCredit.status === 'Active' ? '#dcfce7' : '#fef3c7',
                             color: selectedCredit.status === 'Active' ? '#166534' : '#92400e',
                             padding: '4px 12px',

@@ -37,6 +37,12 @@ class SellOrder(models.Model):
         default='ACTIVE'
     )
 
+    # ========== BLOCKCHAIN INTEGRATION ==========
+    blockchain_tx_hash = models.CharField(
+        max_length=66, null=True, blank=True,
+        help_text="Transaction hash from blockchain sell order creation"
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

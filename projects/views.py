@@ -56,6 +56,7 @@ def issue_credits_to_wallet(user, project, credits_amount):
     
     Creates a CreditWallet entry with type='ISSUED' linked to the project.
     Updates the project's credits_issued field.
+    Also mints tokens on blockchain if user has MetaMask wallet configured.
     
     Args:
         user: Django User instance
@@ -91,6 +92,37 @@ def issue_credits_to_wallet(user, project, credits_amount):
     # Update project's credits_issued field
     project.credits_issued = credits_amount
     project.save(update_fields=['credits_issued'])
+    
+    # === BLOCKCHAIN INTEGRATION ===
+    # Mint tokens on blockchain if user has MetaMask wallet
+    try:
+        from blockchain.services import blockchain_service, BLOCKCHAIN_ENABLED
+        
+        if BLOCKCHAIN_ENABLED and hasattr(user, 'profile') and user.profile.metamask_wallet_address:
+            from datetime import datetime
+            
+            tx_hash = blockchain_service.mint_credits(
+                owner_wallet=user.profile.metamask_wallet_address,
+                amount=credits_amount,
+                project_id=project.id,
+                vintage_year=datetime.now().year
+            )
+            
+            if tx_hash:
+                # Store blockchain tx hash on project (requires model update)
+                if hasattr(project, 'blockchain_tx_hash'):
+                    project.blockchain_tx_hash = tx_hash
+                    project.blockchain_minted = True
+                    project.save(update_fields=['blockchain_tx_hash', 'blockchain_minted'])
+                    
+    except ImportError:
+        # Blockchain module not available, continue without
+        pass
+    except Exception as e:
+        # Log error but don't fail the credit issuance
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f"Blockchain minting failed for project {project.id}: {e}")
     
     return wallet
 

@@ -6,3 +6,4 @@ djangorestframework-simplejwt
 django-cors-headers
 psycopg2
 drf-yasg
+web3>=6.0.0

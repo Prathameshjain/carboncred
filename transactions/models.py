@@ -32,6 +32,12 @@ class Transaction(models.Model):
 
     credits_transferred = models.PositiveIntegerField()
 
+    # ========== BLOCKCHAIN INTEGRATION ==========
+    blockchain_tx_hash = models.CharField(
+        max_length=66, null=True, blank=True,
+        help_text="Transaction hash from blockchain purchase execution"
+    )
+
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

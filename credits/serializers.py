@@ -9,6 +9,8 @@ class CreditWalletSerializer(serializers.ModelSerializer):
     project_name = serializers.CharField(source='project.project_name', read_only=True, allow_null=True)
     project_type = serializers.CharField(source='project.classification', read_only=True, allow_null=True)
     project_location = serializers.SerializerMethodField()
+    blockchain_minted = serializers.SerializerMethodField()
+    blockchain_tx_hash = serializers.SerializerMethodField()
 
     class Meta:
         model = CreditWallet
@@ -22,13 +24,27 @@ class CreditWalletSerializer(serializers.ModelSerializer):
             'credit_type',
             'available_credits',
             'used_credits',
-            'created_at'
+            'created_at',
+            'blockchain_minted',
+            'blockchain_tx_hash',
         ]
         read_only_fields = fields
 
     def get_project_location(self, obj):
         try:
             return obj.project.location if obj.project else None
+        except:
+            return None
+
+    def get_blockchain_minted(self, obj):
+        try:
+            return obj.project.blockchain_minted if obj.project else False
+        except:
+            return False
+
+    def get_blockchain_tx_hash(self, obj):
+        try:
+            return obj.project.blockchain_tx_hash if obj.project else None
         except:
             return None
 

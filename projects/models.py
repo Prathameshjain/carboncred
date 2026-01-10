@@ -158,6 +158,16 @@ class Project(models.Model):
     # Path to saved JSON report file (relative to MEDIA_ROOT)
     report_file_path = models.CharField(max_length=255, null=True, blank=True)
 
+    # ========== BLOCKCHAIN INTEGRATION ==========
+    blockchain_tx_hash = models.CharField(
+        max_length=66, null=True, blank=True,
+        help_text="Transaction hash from blockchain credit minting"
+    )
+    blockchain_minted = models.BooleanField(
+        default=False,
+        help_text="Whether credits have been minted on blockchain"
+    )
+
     # ========== TIMESTAMPS ==========
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

@@ -157,6 +157,10 @@ class ProjectDetailSerializer(serializers.ModelSerializer):
             # Credits
             'credits_issued',
             
+            # Blockchain
+            'blockchain_minted',
+            'blockchain_tx_hash',
+            
             # Full JSON (optional, for debugging)
             'verification_result_json',
             
@@ -177,6 +181,7 @@ class ProjectDetailSerializer(serializers.ModelSerializer):
             'aqi_improvement_proxy', 'claim_gap_pct', 'solar_probability',
             'estimated_panel_area_m2', 'estimated_energy_mwh_year',
             'avoided_co2_tco2_year', 'land_use_conflict', 'credits_issued',
+            'blockchain_minted', 'blockchain_tx_hash',
             'verification_result_json', 'created_at', 'updated_at', 'images'
         ]
     
