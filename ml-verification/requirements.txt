@@ -1,12 +1,30 @@
+# =========================================
+# CarbonCred ML Verification Pipeline
+# =========================================
+# AI/ML dependencies for vegetation segmentation and solar classification
+
 # Core ML Framework
-tensorflow>=2.13.0
+tensorflow>=2.13.0,<2.16.0
 
 # Data Processing
-numpy>=1.24.0
+numpy>=1.24.0,<2.0.0
 pandas>=2.0.0
 
 # Image Processing
 Pillow>=10.0.0
 
-# Optional but recommended for better performance
+# Scientific Computing
 scipy>=1.11.0
+
+# Machine Learning Utilities
+scikit-learn>=1.3.0
+
+# Progress Bars (for training)
+tqdm>=4.65.0
+
+# Visualization (optional)
+matplotlib>=3.7.0
+
+# Development & Testing
+# pytest>=7.4.0
+# pytest-cov>=4.1.0

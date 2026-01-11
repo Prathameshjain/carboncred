@@ -1,0 +1,100 @@
+# =========================================
+# ML Verification Pipeline .gitignore
+# =========================================
+
+# Virtual environment
+venv/
+.venv/
+ENV/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# -----------------------
+# Datasets (large files)
+# -----------------------
+synthetic_data/
+datasets/
+data/
+*.csv
+!dataset_manifest.csv
+
+# -----------------------
+# Model files (use Git LFS for large models)
+# -----------------------
+src/models/checkpoints/
+checkpoints/
+saved_models/
+*.keras
+*.h5
+*.ckpt
+*.ckpt.*
+*.pb
+*.tflite
+*.onnx
+*.pt
+*.pth
+*.safetensors
+saved_model/
+
+# -----------------------
+# Training artifacts
+# -----------------------
+logs/
+tensorboard/
+.tensorboard/
+runs/
+mlruns/
+wandb/
+*.tfevents.*
+
+# -----------------------
+# Jupyter Notebooks
+# -----------------------
+.ipynb_checkpoints/
+*.ipynb_checkpoints/
+
+# -----------------------
+# Output files
+# -----------------------
+src/reports/*.json
+outputs/
+results/
+predictions/
+*.png
+*.jpg
+*.jpeg
+!src/reports/.gitkeep
+
+# -----------------------
+# Testing
+# -----------------------
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+*.cover
+
+# -----------------------
+# Environment
+# -----------------------
+.env
+.env.local
+
+# -----------------------
+# OS files
+# -----------------------
+.DS_Store
+Thumbs.db
+
+# -----------------------
+# Editor files
+# -----------------------
+.vscode/
+.idea/
+*.swp
+*.swo
