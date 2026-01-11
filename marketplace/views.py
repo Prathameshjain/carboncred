@@ -180,20 +180,23 @@ class BuyFromSellOrderView(APIView):
             sell_order.status = 'SOLD'
         sell_order.save()
 
-        CreditWallet.objects.create(
-            user=buyer,
-            project=sell_order.project,
-            credit_type='PURCHASED',
-            available_credits=credits_to_buy,
-            used_credits=0
-        )
-
+        # Create transaction record FIRST
         tx_record = Transaction.objects.create(
             sell_order=sell_order,
             project=sell_order.project,
             seller=sell_order.seller,
             buyer=buyer,
             credits_transferred=credits_to_buy
+        )
+
+        # Create buyer's credit wallet with link to transaction
+        CreditWallet.objects.create(
+            user=buyer,
+            project=sell_order.project,
+            credit_type='PURCHASED',
+            available_credits=credits_to_buy,
+            used_credits=0,
+            transaction=tx_record  # Link to the specific transaction
         )
 
         # === BLOCKCHAIN INTEGRATION ===

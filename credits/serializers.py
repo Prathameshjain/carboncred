@@ -57,16 +57,28 @@ class CreditWalletSerializer(serializers.ModelSerializer):
     def get_blockchain_tx_hash(self, obj):
         """
         For ISSUED credits: return project's minting tx hash
-        For PURCHASED credits: return purchase transaction tx hash from Transaction table
+        For PURCHASED credits: return purchase transaction tx hash from direct link
         """
         try:
             if obj.credit_type == 'PURCHASED':
-                # Look up the purchase transaction for this buyer and project
+                # Use direct transaction link if available (new data)
+                if obj.transaction and obj.transaction.blockchain_tx_hash:
+                    return obj.transaction.blockchain_tx_hash
+                
+                # Fallback for old data without direct link - match by created_at timestamp
                 from transactions.models import Transaction
+                from django.db.models import Q
+                from datetime import timedelta
+                
+                # Find transaction within 1 second of wallet creation
+                time_window = timedelta(seconds=1)
                 transaction = Transaction.objects.filter(
                     buyer=obj.user,
-                    project=obj.project
-                ).order_by('-timestamp').first()
+                    project=obj.project,
+                    timestamp__gte=obj.created_at - time_window,
+                    timestamp__lte=obj.created_at + time_window
+                ).first()
+                
                 if transaction and transaction.blockchain_tx_hash:
                     return transaction.blockchain_tx_hash
                 return None

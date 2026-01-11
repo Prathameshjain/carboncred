@@ -214,12 +214,13 @@ function Mycredits() {
         projectName: c.project_name || (c.project_id ? `Project #${c.project_id}` : "Direct Issuance"),
         location: c.project_location || "N/A",
         projectType: c.project_type || "Carbon Credit",
-        amount: c.available_credits,
+        amount: c.available_credits + c.used_credits, // TOTAL = available + used
         purchaseDate: c.created_at,
         status: c.available_credits > 0 ? "Active" : "Used",
         type: c.credit_type,
         value: listing ? listing.credits_for_sale * listing.price_per_credit : null,
-        retired: c.used_credits,
+        retired: c.used_credits, // Retired/sold credits
+        activeCredits: c.available_credits, // Available credits
         creditType: "ISSUED",
         isListed: !!listing,
         listingInfo: listing,
@@ -235,12 +236,13 @@ function Mycredits() {
         projectName: c.project_name || (c.project_id ? `Project #${c.project_id}` : "Marketplace Purchase"),
         location: c.project_location || "N/A",
         projectType: c.project_type || "Carbon Credit",
-        amount: c.available_credits,
+        amount: c.available_credits + c.used_credits, // TOTAL = available + used
         purchaseDate: c.created_at,
         status: c.available_credits > 0 ? "Active" : "Used",
         type: c.credit_type,
         value: listing ? listing.credits_for_sale * listing.price_per_credit : null,
-        retired: c.used_credits,
+        retired: c.used_credits, // Retired/sold credits
+        activeCredits: c.available_credits, // Available credits
         creditType: "PURCHASED",
         isListed: !!listing,
         listingInfo: listing,
@@ -544,9 +546,7 @@ function Mycredits() {
                                 Active
                               </p>
                               <p className="text-2xl font-bold text-success">
-                                {(
-                                  credit.amount - credit.retired
-                                ).toLocaleString()}
+                                {credit.activeCredits.toLocaleString()}
                               </p>
                             </div>
 
@@ -599,15 +599,14 @@ function Mycredits() {
                                       id: credit.id,
                                       project_id: credit.project_id,
                                       name: credit.projectName,
-                                      activeCredits:
-                                        credit.amount - credit.retired,
+                                      activeCredits: credit.activeCredits,
                                     });
                                     setCreditsForSale("");
                                     setPricePerCredit("");
                                     setError("");
                                     setOpenDialog(true);
                                   }}
-                                  disabled={credit.amount - credit.retired <= 0}
+                                  disabled={credit.activeCredits <= 0}
                                 >
                                   <Store className="w-4 h-4" />
                                   Add to Marketplace
@@ -690,7 +689,7 @@ function Mycredits() {
                     <div className="bg-blue-50 rounded-lg p-4">
                       <p className="text-sm text-blue-600 mb-1">Active Credits</p>
                       <p className="text-2xl font-bold text-blue-700">
-                        {(selectedCredit.amount - selectedCredit.retired).toLocaleString()}
+                        {selectedCredit.activeCredits.toLocaleString()}
                       </p>
                     </div>
                     <div className="bg-amber-50 rounded-lg p-4">

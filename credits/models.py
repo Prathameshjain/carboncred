@@ -29,6 +29,16 @@ class CreditWallet(models.Model):
     available_credits = models.PositiveIntegerField()
     used_credits = models.PositiveIntegerField(default=0)
 
+    # Link to the transaction that created this wallet entry (for PURCHASED credits)
+    transaction = models.ForeignKey(
+        'transactions.Transaction',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='credit_wallets',
+        help_text="The transaction that created this credit entry (for purchased credits)"
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
