@@ -49,7 +49,7 @@ const Marketplace = () => {
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState(null);
-  
+
   // Stats
   const [stats, setStats] = useState({
     activeListings: 0,
@@ -82,16 +82,16 @@ const Marketplace = () => {
         "http://127.0.0.1:8000/api/marketplace/orders/",
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      
+
       const activeListings = response.data;
       setListings(activeListings);
-      
+
       // Calculate stats
       const totalCredits = activeListings.reduce((sum, l) => sum + l.credits_for_sale, 0);
-      const avgPrice = activeListings.length > 0 
+      const avgPrice = activeListings.length > 0
         ? (activeListings.reduce((sum, l) => sum + parseFloat(l.price_per_credit), 0) / activeListings.length).toFixed(2)
         : 0;
-      
+
       setStats({
         activeListings: activeListings.length,
         averagePrice: avgPrice,
@@ -138,7 +138,7 @@ const Marketplace = () => {
 
   const confirmPurchase = async () => {
     if (!selectedProject) return;
-    
+
     if (purchaseQuantity <= 0 || purchaseQuantity > selectedProject.credits) {
       setPurchaseError("Invalid quantity");
       return;
@@ -161,7 +161,7 @@ const Marketplace = () => {
       setOpenDialog(false);
       setToastMessage(`Successfully purchased ${purchaseQuantity} credits from ${selectedProject.name}!`);
       setTimeout(() => setToastMessage(null), 4000);
-      
+
       // Refresh listings
       await fetchListings();
     } catch (error) {
@@ -203,9 +203,8 @@ const Marketplace = () => {
         )}
 
         <div
-          className={`pt-24 transition-all duration-300 ${
-            sidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`pt-24 transition-all duration-300 ${sidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <main className="px-6 py-4 max-w-7xl mx-auto space-y-8">
             {/* Market Stats */}
@@ -231,7 +230,7 @@ const Marketplace = () => {
                         Average Price
                       </p>
                       <p className="text-3xl font-bold text-emerald-600">
-                        ${stats.averagePrice}
+                        ₹{stats.averagePrice}
                       </p>
                     </div>
                     <TrendingUp className="w-8 h-8 text-emerald-500" />
@@ -350,21 +349,20 @@ const Marketplace = () => {
                             Price per Credit
                           </span>
                           <span className="text-lg font-bold text-emerald-400">
-                            ${project.price.toFixed(2)}
+                            ₹{project.price.toFixed(2)}
                           </span>
                         </div>
                         <div className="flex justify-between items-center">
                           <span className="text-sm text-slate-700">Total Value</span>
                           <span className="text-sm font-medium text-slate-600">
-                            ${(project.credits * project.price).toLocaleString()}
+                            ₹{(project.credits * project.price).toLocaleString()}
                           </span>
                         </div>
                         <Button
-                          className={`w-full rounded shadow-lg ${
-                            project.sellerId === userId
+                          className={`w-full rounded shadow-lg ${project.sellerId === userId
                               ? "bg-slate-400 cursor-not-allowed"
                               : "bg-linear-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-emerald-500/20 group-hover:shadow-emerald-500/40"
-                          }`}
+                            }`}
                           onClick={() => handlePurchase(project)}
                           disabled={project.sellerId === userId}
                         >
@@ -423,14 +421,14 @@ const Marketplace = () => {
                     <div className="flex justify-between">
                       <span className="text-gray-700">Price per Credit</span>
                       <span className="font-semibold text-emerald-400">
-                        ${selectedProject.price.toFixed(2)}
+                        ₹{selectedProject.price.toFixed(2)}
                       </span>
                     </div>
 
                     {/* Quantity Input */}
                     <div className="flex flex-col gap-2 mt-4">
                       <label className="text-slate-700 font-medium">
-                        Quantity to Purchase
+                        Credits to Purchase
                       </label>
                       <input
                         type="number"
@@ -448,7 +446,7 @@ const Marketplace = () => {
                       <div className="flex justify-between items-center">
                         <span className="text-emerald-700 font-medium">Total Cost</span>
                         <span className="text-2xl font-bold text-emerald-700">
-                          ${(purchaseQuantity * selectedProject.price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          ₹{(purchaseQuantity * selectedProject.price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
                       </div>
                     </div>
@@ -459,7 +457,7 @@ const Marketplace = () => {
                     )}
 
                     <div className="flex gap-2">
-                      <Button 
+                      <Button
                         variant="outline"
                         className="flex-1 rounded text-slate-700 hover:bg-slate-100"
                         onClick={() => setOpenDialog(false)}
@@ -467,7 +465,7 @@ const Marketplace = () => {
                       >
                         Cancel
                       </Button>
-                      <Button 
+                      <Button
                         className="flex-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white"
                         onClick={confirmPurchase}
                         disabled={purchaseLoading}

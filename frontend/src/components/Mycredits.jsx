@@ -1098,7 +1098,7 @@ function Mycredits() {
                   {/* Price per Credit */}
                   <div className="flex flex-col gap-1">
                     <label className="text-slate-700 font-medium">
-                      Price per Credit ($)
+                      Price per Credit (₹)
                     </label>
                     <input
                       type="number"
@@ -1173,7 +1173,7 @@ function Mycredits() {
                   <div className="flex justify-between">
                     <span className="text-slate-600">Price per Credit</span>
                     <span className="font-medium text-slate-900">
-                      ${pricePerCredit}
+                      ₹{pricePerCredit}
                     </span>
                   </div>
 
