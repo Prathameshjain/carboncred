@@ -196,7 +196,8 @@ class BuyFromSellOrderView(APIView):
             credit_type='PURCHASED',
             available_credits=credits_to_buy,
             used_credits=0,
-            transaction=tx_record  # Link to the specific transaction
+            transaction=tx_record,  # Link to the specific transaction
+            price_per_credit=sell_order.price_per_credit  # Store purchase price in INR
         )
 
         # === BLOCKCHAIN INTEGRATION ===

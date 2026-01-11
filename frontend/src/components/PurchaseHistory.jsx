@@ -87,7 +87,7 @@ const PurchaseHistory = () => {
     const buyerId = parseInt(transaction.buyer_id, 10);
     const sellerId = parseInt(transaction.seller_id, 10);
     const currentUser = parseInt(userId, 10);
-    
+
     if (buyerId === currentUser) return "PURCHASE";
     if (sellerId === currentUser) return "SALE";
     return "UNKNOWN";
@@ -97,11 +97,11 @@ const PurchaseHistory = () => {
   const totalSpent = transactions
     .filter(t => getTransactionType(t) === "PURCHASE")
     .reduce((sum, t) => sum + parseFloat(t.total_amount || 0), 0);
-  
+
   const totalEarned = transactions
     .filter(t => getTransactionType(t) === "SALE")
     .reduce((sum, t) => sum + parseFloat(t.total_amount || 0), 0);
-  
+
   const totalCreditsTransferred = transactions.reduce((sum, t) => sum + t.credits_transferred, 0);
 
   // Filter transactions
@@ -135,9 +135,8 @@ const PurchaseHistory = () => {
         )}
 
         <div
-          className={`pt-24 transition-all duration-300 ${
-            sidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`pt-24 transition-all duration-300 ${sidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <main className="px-6 py-4 max-w-7xl mx-auto space-y-8">
             {/* Summary Cards */}
@@ -147,7 +146,7 @@ const PurchaseHistory = () => {
                   <div>
                     <p className="flex items-start text-sm text-slate-400">Total Spent</p>
                     <p className="text-3xl font-bold text-red-400">
-                      ${totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      ₹{totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                   </div>
                   <ArrowUpRight className="w-8 h-8 text-red-400" />
@@ -159,7 +158,7 @@ const PurchaseHistory = () => {
                   <div>
                     <p className="flex items-start text-sm text-slate-400">Total Earned</p>
                     <p className="text-3xl font-bold text-emerald-400">
-                      ${totalEarned.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      ₹{totalEarned.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                   </div>
                   <ArrowDownLeft className="w-8 h-8 text-emerald-400" />
@@ -223,7 +222,7 @@ const PurchaseHistory = () => {
               </Button>
               <Button variant="outline" className="gap-2 rounded bg-emerald-600 border-slate-700 text-white hover:bg-emerald-500 hover:text-slate-900">
                 <Download className="w-4 h-4" />
-                    Export
+                Export
               </Button>
             </div>
 
@@ -256,7 +255,7 @@ const PurchaseHistory = () => {
                   filteredTransactions.map((transaction) => {
                     const txType = getTransactionType(transaction);
                     const isBuyer = txType === "PURCHASE";
-                    
+
                     return (
                       <Card key={transaction.id}
                         className="bg-muted/30 border-border/50 hover:shadow-xl transition-all shadow-md">
@@ -337,7 +336,7 @@ const PurchaseHistory = () => {
                                   Price/Credit
                                 </p>
                                 <p className="text-xl font-bold text-blue-600">
-                                  ${parseFloat(transaction.price_per_credit || 0).toFixed(2)}
+                                  ₹{parseFloat(transaction.price_per_credit || 0).toFixed(2)}
                                 </p>
                               </div>
                               <div>
@@ -345,7 +344,7 @@ const PurchaseHistory = () => {
                                   Total
                                 </p>
                                 <p className={`text-xl font-bold ${isBuyer ? 'text-red-600' : 'text-emerald-600'}`}>
-                                  {isBuyer ? '-' : '+'}${(transaction.total_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  {isBuyer ? '-' : '+'}₹{(transaction.total_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </p>
                               </div>
                             </div>

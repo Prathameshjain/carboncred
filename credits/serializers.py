@@ -11,6 +11,7 @@ class CreditWalletSerializer(serializers.ModelSerializer):
     project_location = serializers.SerializerMethodField()
     blockchain_minted = serializers.SerializerMethodField()
     blockchain_tx_hash = serializers.SerializerMethodField()
+    portfolio_value = serializers.SerializerMethodField()
 
     class Meta:
         model = CreditWallet
@@ -24,6 +25,8 @@ class CreditWalletSerializer(serializers.ModelSerializer):
             'credit_type',
             'available_credits',
             'used_credits',
+            'price_per_credit',
+            'portfolio_value',
             'created_at',
             'blockchain_minted',
             'blockchain_tx_hash',
@@ -87,6 +90,31 @@ class CreditWalletSerializer(serializers.ModelSerializer):
                 return obj.project.blockchain_tx_hash if obj.project else None
         except:
             return None
+
+    def get_portfolio_value(self, obj):
+        """
+        Calculate portfolio value in INR:
+        - PURCHASED: available_credits × price_per_credit (actual purchase price)
+        - ISSUED: available_credits × price_per_credit (if sold) or default rate
+        """
+        DEFAULT_RATE = 1500  # ₹1500 per credit default
+        
+        try:
+            total_credits = obj.available_credits + obj.used_credits
+            
+            if obj.price_per_credit:
+                # Use stored price (from purchase or sale)
+                return float(obj.price_per_credit) * total_credits
+            elif obj.credit_type == 'PURCHASED' and obj.transaction:
+                # Fallback: get price from related sell order
+                from marketplace.models import SellOrder
+                if obj.transaction.sell_order:
+                    return float(obj.transaction.sell_order.price_per_credit) * total_credits
+            
+            # Default rate for ISSUED credits with no sale history
+            return DEFAULT_RATE * total_credits
+        except:
+            return DEFAULT_RATE * (obj.available_credits + obj.used_credits)
 
 
 # 2️⃣ Dashboard Summary Serializer

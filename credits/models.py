@@ -39,6 +39,15 @@ class CreditWallet(models.Model):
         help_text="The transaction that created this credit entry (for purchased credits)"
     )
 
+    # Price per credit in INR at time of transaction
+    price_per_credit = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="Price per credit in INR at time of purchase/listing"
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

@@ -218,7 +218,8 @@ function Mycredits() {
         purchaseDate: c.created_at,
         status: c.available_credits > 0 ? "Active" : "Used",
         type: c.credit_type,
-        value: listing ? listing.credits_for_sale * listing.price_per_credit : null,
+        value: c.portfolio_value || (c.available_credits + c.used_credits) * 1500, // Portfolio value in INR from API
+        pricePerCredit: c.price_per_credit || 1500, // Price per credit in INR
         retired: c.used_credits, // Retired/sold credits
         activeCredits: c.available_credits, // Available credits
         creditType: "ISSUED",
@@ -240,7 +241,8 @@ function Mycredits() {
         purchaseDate: c.created_at,
         status: c.available_credits > 0 ? "Active" : "Used",
         type: c.credit_type,
-        value: listing ? listing.credits_for_sale * listing.price_per_credit : null,
+        value: c.portfolio_value || (c.available_credits + c.used_credits) * 1500, // Portfolio value in INR from API
+        pricePerCredit: c.price_per_credit || 1500, // Price per credit in INR
         retired: c.used_credits, // Retired/sold credits
         activeCredits: c.available_credits, // Available credits
         creditType: "PURCHASED",
@@ -253,7 +255,7 @@ function Mycredits() {
   ];
 
   const totalCredits = creditSummary.total_available;
-  const totalValue = credits.reduce((sum, credit) => sum + (credit.value || credit.amount * 18.5), 0);
+  const totalValue = credits.reduce((sum, credit) => sum + (credit.value || 0), 0); // Portfolio value in INR
   const totalRetired = creditSummary.total_used;
   const activeCredits = creditSummary.total_available;
 
@@ -450,7 +452,7 @@ function Mycredits() {
                         Portfolio Value
                       </p>
                       <p className="text-3xl font-bold text-blue-500">
-                        ${totalValue.toLocaleString()}
+                        ₹{totalValue.toLocaleString()}
                       </p>
                     </div>
                     <TrendingUp className="w-8 h-8 text-primary" />
@@ -557,7 +559,7 @@ function Mycredits() {
                                   Listed Value
                                 </p>
                                 <p className="text-2xl font-bold text-emerald-600">
-                                  ${credit.value.toLocaleString()}
+                                  ₹{credit.value.toLocaleString()}
                                 </p>
                               </div>
                             )}
@@ -701,7 +703,7 @@ function Mycredits() {
                     <div className="bg-purple-50 rounded-lg p-4">
                       <p className="text-sm text-purple-600 mb-1">Portfolio Value</p>
                       <p className="text-2xl font-bold text-purple-700">
-                        ${(selectedCredit.value || selectedCredit.amount * 18.5).toLocaleString()}
+                        ₹{selectedCredit.value.toLocaleString()}
                       </p>
                     </div>
                   </div>
@@ -775,7 +777,7 @@ function Mycredits() {
                         <div className="flex justify-between">
                           <span className="text-emerald-600">Total Value</span>
                           <span className="font-bold text-emerald-800">
-                            ${(selectedCredit.listingInfo.credits_for_sale * parseFloat(selectedCredit.listingInfo.price_per_credit)).toLocaleString()}
+                            ₹{(selectedCredit.listingInfo.credits_for_sale * parseFloat(selectedCredit.listingInfo.price_per_credit)).toLocaleString()}
                           </span>
                         </div>
                       </div>
@@ -917,7 +919,7 @@ function Mycredits() {
                       <tr style={{ backgroundColor: '#ecfdf5' }}>
                         <td style={{ padding: '12px', fontWeight: '600', color: '#065f46' }}>Portfolio Value</td>
                         <td style={{ padding: '12px', color: '#065f46', fontWeight: 'bold', fontSize: '18px' }}>
-                          ${(selectedCredit.value || selectedCredit.amount * 18.5).toLocaleString()}
+                          ₹{selectedCredit.value.toLocaleString()}
                         </td>
                       </tr>
                     </tbody>
@@ -1116,7 +1118,7 @@ function Mycredits() {
                       <div className="flex justify-between items-center">
                         <span className="text-emerald-700">Total Listing Value</span>
                         <span className="text-xl font-bold text-emerald-700">
-                          ${(creditsForSale * pricePerCredit).toLocaleString()}
+                          ₹{(creditsForSale * pricePerCredit).toLocaleString()}
                         </span>
                       </div>
                     </div>
@@ -1180,7 +1182,7 @@ function Mycredits() {
                       Total Listing Value
                     </span>
                     <span className="font-bold text-emerald-600">
-                      ${(creditsForSale * pricePerCredit).toLocaleString()}
+                      ₹{(creditsForSale * pricePerCredit).toLocaleString()}
                     </span>
                   </div>
 
