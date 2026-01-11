@@ -1,19 +1,36 @@
 from django.contrib.auth.models import User
+from django.contrib.auth import authenticate
 from rest_framework import serializers
 from .models import Profile
 
 class RegisterSerializer(serializers.ModelSerializer):
     password2 = serializers.CharField(write_only=True)
-    company_name = serializers.CharField(write_only=True)
-    location = serializers.CharField(write_only=True)
+
+    # Profile fields
+    name = serializers.CharField(write_only=True)
+    registration_no = serializers.CharField(write_only=True)
+    registration_year = serializers.IntegerField(write_only=True)
+    owner_name = serializers.CharField(write_only=True)
     phone = serializers.CharField(write_only=True)
-    role = serializers.ChoiceField(choices=Profile.ROLE_CHOICES, write_only=True)
-    active_since = serializers.DateField(write_only=True)
+    pan_id = serializers.CharField(write_only=True)
+    metamask_wallet_address = serializers.CharField(write_only=True)
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'password', 'password2',
-                  'company_name', 'location', 'phone', 'role', 'active_since')
+        fields = (
+            'id',
+            'username',
+            'email',
+            'password',
+            'password2',
+            'name',
+            'registration_no',
+            'registration_year',
+            'owner_name',
+            'phone',
+            'pan_id',
+            'metamask_wallet_address'
+        )
         extra_kwargs = {'password': {'write_only': True}}
 
     def validate(self, data):
@@ -25,25 +42,63 @@ class RegisterSerializer(serializers.ModelSerializer):
         password = validated_data.pop("password")
         validated_data.pop("password2")
 
-        company_name = validated_data.pop("company_name")
-        location = validated_data.pop("location")
+        name = validated_data.pop("name")
+        registration_no = validated_data.pop("registration_no")
+        registration_year = validated_data.pop("registration_year")
+        owner_name = validated_data.pop("owner_name")
         phone = validated_data.pop("phone")
-        role = validated_data.pop("role")
-        active_since = validated_data.pop("active_since")
+        pan_id = validated_data.pop("pan_id")
+        metamask_wallet_address = validated_data.pop("metamask_wallet_address")
 
         user = User.objects.create_user(
             username=validated_data["username"],
-            email=validated_data.get("email", ""),
+            email=validated_data.get("email"),
             password=password
         )
 
         Profile.objects.create(
             user=user,
-            company_name=company_name,
-            location=location,
+            name=name,
+            email=user.email,
+            registration_no=registration_no,
+            registration_year=registration_year,
+            owner_name=owner_name,
             phone=phone,
-            role=role,
-            active_since=active_since
+            pan_id=pan_id,
+            metamask_wallet_address=metamask_wallet_address
         )
 
         return user
+
+
+class LoginSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField(write_only=True)
+
+    def validate(self, data):
+        user = authenticate(username=data['username'], password=data['password'])
+        if not user:
+            raise serializers.ValidationError("Invalid username or password.")
+        data['user'] = user
+        return data
+
+
+class ProfileSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='user.username', read_only=True)
+    user_id = serializers.IntegerField(source='user.id', read_only=True)
+    
+    class Meta:
+        model = Profile
+        fields = [
+            'user_id',
+            'username',
+            'name',
+            'email',
+            'registration_no',
+            'registration_year',
+            'owner_name',
+            'phone',
+            'pan_id',
+            'metamask_wallet_address',
+            'created_at',
+        ]

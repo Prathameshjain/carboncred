@@ -1,8 +1,39 @@
-Django>=3.2
-# Django version can be adjusted as per your project, 3.2 is LTS and common for many projects
-djangorestframework
-django-environ
-djangorestframework-simplejwt
-django-cors-headers
-psycopg2
-drf-yasg
+# =========================================
+# CarbonCred Backend - Python Dependencies
+# =========================================
+# Django Backend for Carbon Credit Marketplace
+
+# Django Framework
+Django>=4.2,<5.0
+
+# Django REST Framework
+djangorestframework>=3.14.0
+
+# JWT Authentication
+djangorestframework-simplejwt>=5.3.0
+
+# Environment Variables
+django-environ>=0.11.0
+
+# CORS Headers (for frontend integration)
+django-cors-headers>=4.3.0
+
+# PostgreSQL Adapter
+psycopg2-binary>=2.9.9
+
+# API Documentation (Swagger/ReDoc)
+drf-yasg>=1.21.7
+
+# Image Processing (for project images)
+Pillow>=10.0.0
+
+# Blockchain Integration
+web3>=6.0.0
+
+# Production Server (optional)
+gunicorn>=21.0.0
+
+# Development & Testing
+# pytest>=7.4.0
+# pytest-django>=4.5.0
+# coverage>=7.3.0

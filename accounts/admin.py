@@ -3,4 +3,14 @@ from .models import Profile
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('user','role','company_name','phone')
+    list_display = (
+        'id',
+        'user',
+        'name',
+        'email',
+        'registration_no',
+        'registration_year',
+        'phone',
+        'metamask_wallet_address',
+        'created_at'
+    )

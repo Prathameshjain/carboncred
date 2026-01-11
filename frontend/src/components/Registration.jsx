@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import GradientBg from '../assets/GradientBg.png';
 
 import {
   Eye,
@@ -15,6 +16,8 @@ import {
 export default function CarbonLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -22,11 +25,13 @@ export default function CarbonLoginPage() {
     email: "",
     password: "",
     password2: "",
-    company_name: "",
-    location: "",
+    name: "",
+    registration_no: "",
+    registration_year: new Date().getFullYear(),
+    owner_name: "",
     phone: "",
-    role: "buyer", // default
-    active_since: "",
+    pan_id: "",
+    metamask_wallet_address: "",
   });
 
   const handleInputChange = (e) => {
@@ -57,12 +62,11 @@ export default function CarbonLoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log("Registration attempt:", formData);
-
+    setLoading(true);
     // Clear previous errors
     setErrorMessage("");
 
     try {
-      // Replace this URL with Prathamesh's backend registration API
       const response = await axios.post(
         "http://127.0.0.1:8000/api/accounts/register/",
         formData
@@ -70,34 +74,40 @@ export default function CarbonLoginPage() {
 
       if (response.status === 201 || response.status === 200) {
         alert("Registration successful!");
-        // Optionally redirect to login page
-        navigate("/Dashboard");
+        navigate("/Login");
       }
     } catch (error) {
-      console.log(error);
-      if (error.response) {
-        // Backend returned an error
-        setErrorMessage(error.response.data.message || "Registration failed");
+      console.log("BACKEND ERROR:", error.response?.data);
+      if (error.response?.data) {
+        const apiErrors = error.response.data;
+        const readable = Object.entries(apiErrors)
+          .map(([field, messages]) => `${field}: ${messages}`)
+          .join("\n");
+
+        setErrorMessage(readable || "Registration failed");
       } else {
         setErrorMessage("Server not reachable");
       }
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen flex">
       {/* Left Side - Form */}
-      <div className="flex-1 flex items-center justify-center px-8 py-12 bg-white">
-        <div className="w-full max-w-3xl">
+      <div className="lg:w-3/5 flex items-center justify-center px-8 py-12 bg-white"
+        style={{ backgroundImage: `url(${GradientBg})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
+        <div className="w-full max-w-xl">
           {/* Header */}
           <div className="text-center mb-8">
             <div className="flex items-center justify-center space-x-2 mb-4">
               <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
                 <Leaf className="w-6 h-6 text-white" />
               </div>
-              <span className="text-2xl font-bold text-gray-900">
-                CarbonCred
-              </span>
+              <span className="text-2xl font-bold">
+                  Carbon<span className="text-green-600">Cred</span>
+                </span>
             </div>
             <h2 className="text-3xl font-bold text-gray-900 mb-2">Register</h2>
             <p className="text-gray-600">
@@ -210,8 +220,8 @@ export default function CarbonLoginPage() {
               </label>
               <input
                 type="text"
-                name="company_name"
-                value={formData.company_name}
+                name="name"
+                value={formData.name}
                 onChange={handleInputChange}
                 placeholder="Company name"
                 className="block w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500"
@@ -219,17 +229,17 @@ export default function CarbonLoginPage() {
               />
             </div>
 
-            {/* Location */}
+            {/* Registration Number */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Location
+                Registration Number
               </label>
               <input
                 type="text"
-                name="location"
-                value={formData.location}
+                name="registration_no"
+                value={formData.registration_no}
                 onChange={handleInputChange}
-                placeholder="Location"
+                placeholder="Registration number"
                 className="block w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500"
                 required
               />
@@ -251,33 +261,68 @@ export default function CarbonLoginPage() {
               />
             </div>
 
-            {/* Role */}
+            {/* Owner Name */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Role
-              </label>
-              <select
-                name="role"
-                value={formData.role}
-                onChange={handleInputChange}
-                className="block w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500"
-              >
-                <option value="Credit Issuer">Credit Issuer</option>
-                <option value="Carbon Credit Buyer">Carbon Credit Buyer</option>
-              </select>
-            </div>
-
-            {/* Active Since */}
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Active Since
+                Owner Name
               </label>
               <input
-                type="date"
-                name="active_since"
-                value={formData.active_since}
+                type="text"
+                name="owner_name"
+                value={formData.owner_name}
                 onChange={handleInputChange}
+                placeholder="Owner name"
                 className="block w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500"
+                required
+              />
+            </div>
+
+            {/* PAN ID */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                PAN ID
+              </label>
+              <input
+                type="text"
+                name="pan_id"
+                value={formData.pan_id}
+                onChange={handleInputChange}
+                placeholder="PAN ID"
+                className="block w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500"
+                required
+              />
+            </div>
+
+            {/* MetaMask Wallet Address */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                MetaMask Wallet Address
+              </label>
+              <input
+                type="text"
+                name="metamask_wallet_address"
+                value={formData.metamask_wallet_address}
+                onChange={handleInputChange}
+                placeholder="0x..."
+                className="block w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500"
+                required
+              />
+            </div>
+
+            {/* Registration Year */}
+            <div className="md:col-span-2 flex flex-col items-center">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Registration Year
+              </label>
+
+              <input
+                type="number"
+                name="registration_year"
+                value={formData.registration_year}
+                onChange={handleInputChange}
+                min="1900"
+                max={new Date().getFullYear()}
+                className="w-1/2 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500"
                 required
               />
             </div>
@@ -286,24 +331,28 @@ export default function CarbonLoginPage() {
             <div className="md:col-span-2">
               <button
                 type="submit"
-                className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-[1.02]"
+                disabled={loading}
+                className={`mt-4 w-full py-2 rounded text-white font-semibold 
+                  ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-500"}`}
               >
-                Register
+                {loading ? "Registering..." : "Register"}
               </button>
             </div>
           </form>
 
           {/* Security Note */}
-          <div className="mt-2 bg-gray-50 rounded-lg p-4 border border-gray-200">
-            <Shield className="w-5 h-5 text-gray-600 mt-0.5 flex-shrink-0" />
-            <div className="justify-center space-x-2">
-              <div className=" position top z-0 items-center">
-                <p className="text-sm text-gray-700 font-medium">
-                  Secure Login
-                </p>
-                <p className="text-xs text-gray-600">
-                  Your data is protected with enterprise-grade security
-                </p>
+          <div className="flex flex-col items-center">
+            <div className="w-3/4 mt-4 bg-gray-50 rounded-lg p-3 border border-gray-200">
+              <Shield className="w-5 h-5 text-gray-600 mt-0.5 flex-shrink-0" />
+              <div className="justify-center space-x-2">
+                <div className=" position top z-0 items-center">
+                  <p className="text-sm text-gray-700 font-medium">
+                    Secure Login
+                  </p>
+                  <p className="text-xs text-gray-600">
+                    Your data is protected with enterprise-grade security
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -311,7 +360,7 @@ export default function CarbonLoginPage() {
       </div>
 
       {/* Right Side - Visual/Info Panel */}
-      <div className="hidden lg:flex flex-1 bg-gradient-to-br from-green-600 via-green-700 to-emerald-800 relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-2/5 bg-gradient-to-br from-green-600 via-green-700 to-emerald-800 relative overflow-hidden justify-center">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-20 left-20 w-32 h-32 border-2 border-white rounded-full animate-pulse"></div>

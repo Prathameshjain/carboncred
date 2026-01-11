@@ -1,0 +1,90 @@
+import React from "react";
+import GradientBg from '../../assets/GradientBg.png';
+import { Menu, Bell, User, ChevronDown, Settings, LogOut, Leaf } from "lucide-react";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+
+
+const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    // Clear all auth tokens from localStorage
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    // Close the menu
+    setUserMenuOpen(false);
+    // Redirect to login page
+    navigate("/Login");
+  };
+
+  return (
+    <>
+    <div className="absolute"></div>
+      <nav className="fixed top-0 left-0 right-0 z-40 backdrop-blur-xl bg-white/70 border-b border-white/20">
+        <div className="flex items-center justify-between px-6 py-4">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="p-2 hover:bg-white/40 rounded-xl transition-colors"
+            >
+              <Menu size={24} className="text-slate-700" />
+            </button>
+            <Link to="/" className="flex items-center gap-2 cursor-pointer no-underline!">
+              <div className="flex items-center gap-2 ">
+                <div className="w-10 h-10 rounded-xl bg-linear-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg">
+                  <Leaf size={24} className="text-white" />
+                </div>
+                <span className="text-2xl font-bold text-black bg-clip-text">
+                  Carbon<span className="text-green-600">Cred</span>
+                </span>
+              </div>
+            </Link>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button className="relative p-3 hover:bg-white/40 rounded-xl transition-colors">
+              <Bell size={20} className="text-slate-600" />
+              <span className="absolute top-2 right-2 w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+            </button>
+
+            <div className="relative">
+              <button
+                onClick={() => setUserMenuOpen(!userMenuOpen)}
+                className="flex items-center gap-2 p-2 hover:bg-white/40 rounded-xl transition-colors"
+              >
+                <div className="w-9 h-9 rounded-xl bg-linear-to-br from-teal-400 to-cyan-400 flex items-center justify-center shadow-md">
+                  <User size={18} className="text-white" />
+                </div>
+                <ChevronDown size={16} className="text-slate-600" />
+              </button>
+
+              {userMenuOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white border border-white/20 rounded-xl shadow-xl overflow-hidden">
+                  <button 
+                    onClick={() => {
+                      setUserMenuOpen(false);
+                      navigate("/Profile");
+                    }}
+                    className="w-full px-4 py-3 text-left hover:bg-white/40 transition-colors flex items-center gap-2 text-sm"
+                  >
+                    <User size={16} /> Profile
+                  </button>
+                  <button 
+                    onClick={handleLogout}
+                    className="w-full px-4 py-3 text-left hover:bg-white/40 transition-colors flex items-center gap-2 text-sm border-t border-white/10 text-red-600"
+                  >
+                    <LogOut size={16} /> Signout
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </nav>
+    // </>
+    );
+};
+
+export default Navbar;
