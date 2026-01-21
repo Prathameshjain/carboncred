@@ -222,6 +222,9 @@ class ProjectListSerializer(serializers.ModelSerializer):
             'claimed_improvement_pct',
             'explanation',
             'created_at',
+            # Blockchain fields for displaying blockchain record in verification reports
+            'blockchain_minted',
+            'blockchain_tx_hash',
         ]
 
 
