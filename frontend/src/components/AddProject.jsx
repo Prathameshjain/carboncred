@@ -89,12 +89,12 @@ const AddProject = () => {
         newErrors[field] = "This field is required";
       }
     });
-    
+
     // At least one image required
     if (!formData.before_image && !formData.after_image) {
       newErrors.before_image = "At least one image is required";
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -125,7 +125,7 @@ const AddProject = () => {
       submitData.append("project_area_hectares", formData.project_area_hectares);
       submitData.append("project_cost_lakh_inr", formData.project_cost_lakh_inr);
       submitData.append("claimed_improvement_pct", formData.claimed_improvement_pct);
-      
+
       if (formData.project_latitude) {
         submitData.append("project_latitude", formData.project_latitude);
       }
@@ -166,9 +166,9 @@ const AddProject = () => {
 
     } catch (error) {
       console.error("Project submission error:", error.response?.data || error);
-      const errorMsg = error.response?.data?.detail || 
-                       error.response?.data?.before_image?.[0] ||
-                       "Failed to submit project";
+      const errorMsg = error.response?.data?.detail ||
+        error.response?.data?.before_image?.[0] ||
+        "Failed to submit project";
       setToastMessage(errorMsg);
       setTimeout(() => setToastMessage(null), 5000);
     } finally {
@@ -186,9 +186,8 @@ const AddProject = () => {
 
       <div className="flex relative pt-24">
         <aside
-          className={`pt-24 transition-all duration-300 ${
-            sidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`pt-24 transition-all duration-300 ${sidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           {/* Sidebar */}
           <div className="sticky top-24 h-[calc(100vh-6rem)]">
@@ -245,11 +244,10 @@ const AddProject = () => {
                       name="project_name"
                       value={formData.project_name}
                       onChange={handleChange}
-                      className={`w-full px-4 py-2.5 border ${
-                        errors.project_name
-                          ? "border-red-500"
-                          : "border-slate-300"
-                      } rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition`}
+                      className={`w-full px-4 py-2.5 border ${errors.project_name
+                        ? "border-red-500"
+                        : "border-slate-300"
+                        } rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition`}
                       placeholder="e.g., Amazon Rainforest Conservation Project"
                     />
                     {errors.project_name && (
@@ -268,11 +266,10 @@ const AddProject = () => {
                       name="classification"
                       value={formData.classification}
                       onChange={handleChange}
-                      className={`w-full px-4 py-2.5 border ${
-                        errors.classification
-                          ? "border-red-500"
-                          : "border-slate-300"
-                      } rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition`}
+                      className={`w-full px-4 py-2.5 border ${errors.classification
+                        ? "border-red-500"
+                        : "border-slate-300"
+                        } rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition`}
                     >
                       <option value="">Select classification</option>
                       <option value="SOLAR">Solar</option>
@@ -299,11 +296,10 @@ const AddProject = () => {
                       onChange={handleChange}
                       step="0.01"
                       min="0"
-                      className={`w-full px-4 py-2.5 border ${
-                        errors.project_area_hectares
-                          ? "border-red-500"
-                          : "border-slate-300"
-                      } rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition`}
+                      className={`w-full px-4 py-2.5 border ${errors.project_area_hectares
+                        ? "border-red-500"
+                        : "border-slate-300"
+                        } rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition`}
                       placeholder="e.g., 50.00"
                     />
                     {errors.project_area_hectares && (
@@ -316,7 +312,7 @@ const AddProject = () => {
                   {/* Project Cost */}
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Project Cost (Lakh INR) <span className="text-red-500">*</span>
+                      Project Cost (Crore INR) <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="number"
@@ -325,11 +321,10 @@ const AddProject = () => {
                       onChange={handleChange}
                       step="0.01"
                       min="0"
-                      className={`w-full px-4 py-2.5 border ${
-                        errors.project_cost_lakh_inr
-                          ? "border-red-500"
-                          : "border-slate-300"
-                      } rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition`}
+                      className={`w-full px-4 py-2.5 border ${errors.project_cost_lakh_inr
+                        ? "border-red-500"
+                        : "border-slate-300"
+                        } rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition`}
                       placeholder="e.g., 25.00"
                     />
                     {errors.project_cost_lakh_inr && (
@@ -352,11 +347,10 @@ const AddProject = () => {
                       step="0.01"
                       min="0"
                       max="100"
-                      className={`w-full px-4 py-2.5 border ${
-                        errors.claimed_improvement_pct
-                          ? "border-red-500"
-                          : "border-slate-300"
-                      } rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition`}
+                      className={`w-full px-4 py-2.5 border ${errors.claimed_improvement_pct
+                        ? "border-red-500"
+                        : "border-slate-300"
+                        } rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition`}
                       placeholder="e.g., 15.00"
                     />
                     {errors.claimed_improvement_pct && (
@@ -457,10 +451,10 @@ const AddProject = () => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Before Image */}
+                  {/*  Image 1 */}
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Before Image <span className="text-red-500">*</span>
+                      Image 1 <span className="text-red-500">*</span>
                     </label>
                     <div className={`border-2 border-dashed ${errors.before_image ? 'border-red-500' : 'border-slate-300'} rounded-lg p-4 text-center hover:border-emerald-500 transition`}>
                       {formData.before_image ? (
@@ -477,7 +471,7 @@ const AddProject = () => {
                         <>
                           <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
                           <label htmlFor="beforeImage" className="text-emerald-600 font-medium cursor-pointer hover:underline text-sm">
-                            Click to upload before image
+                            Click to upload image
                           </label>
                           <input
                             id="beforeImage"
@@ -506,10 +500,10 @@ const AddProject = () => {
                     </div>
                   </div>
 
-                  {/* After Image */}
+                  {/* Image 2 */}
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">
-                      After Image
+                      Image 2
                     </label>
                     <div className="border-2 border-dashed border-slate-300 rounded-lg p-4 text-center hover:border-emerald-500 transition">
                       {formData.after_image ? (
@@ -526,7 +520,7 @@ const AddProject = () => {
                         <>
                           <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
                           <label htmlFor="afterImage" className="text-emerald-600 font-medium cursor-pointer hover:underline text-sm">
-                            Click to upload after image
+                            Click to upload image 2
                           </label>
                           <input
                             id="afterImage"
@@ -612,7 +606,7 @@ const AddProject = () => {
                 >
                   Cancel
                 </button>
-                
+
                 {/* Show different buttons based on verification status */}
                 {verificationResult ? (
                   <button
@@ -626,11 +620,10 @@ const AddProject = () => {
                   <button
                     onClick={handleSubmit}
                     disabled={loading}
-                    className={`px-6 py-2.5 rounded-lg text-white transition flex items-center gap-2 font-medium shadow-md ${
-                      loading 
-                        ? 'bg-gray-400 cursor-not-allowed' 
-                        : 'bg-emerald-600 hover:bg-emerald-700'
-                    }`}
+                    className={`px-6 py-2.5 rounded-lg text-white transition flex items-center gap-2 font-medium shadow-md ${loading
+                      ? 'bg-gray-400 cursor-not-allowed'
+                      : 'bg-emerald-600 hover:bg-emerald-700'
+                      }`}
                   >
                     {loading ? (
                       <>
