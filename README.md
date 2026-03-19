@@ -2,12 +2,11 @@
 
 <div align="center">
 
-![CarbonCred Logo](https://img.shields.io/badge/🌍-CarbonCred-green?style=for-the-badge)
-
 **Decentralized Carbon Credit Marketplace with AI Verification**
 
 [![Django](https://img.shields.io/badge/Django-4.2-092E20?style=flat&logo=django)](https://djangoproject.com)
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=flat&logo=react)](https://reactjs.org)
+[![Vite](https://img.shields.io/badge/Vite-7-646CFF?style=flat&logo=vite)](https://vitejs.dev)
 [![Ethereum](https://img.shields.io/badge/Ethereum-Sepolia-3C3C3D?style=flat&logo=ethereum)](https://ethereum.org)
 [![TensorFlow](https://img.shields.io/badge/TensorFlow-2.13-FF6F00?style=flat&logo=tensorflow)](https://tensorflow.org)
 [![License](https://img.shields.io/badge/License-MIT-blue?style=flat)](LICENSE)
@@ -18,80 +17,41 @@
 
 ## 📋 Table of Contents
 
-- [Overview](#-overview)
-- [Features](#-features)
-- [Architecture](#-architecture)
+- [Project Overview](#-project-overview)
+- [Tech Stack](#-tech-stack)
 - [Project Structure](#-project-structure)
 - [Prerequisites](#-prerequisites)
-- [Installation](#-installation)
 - [Environment Variables](#-environment-variables)
-- [Docker Setup](#-docker-setup)
-- [API Documentation](#-api-documentation)
-- [Frontend](#-frontend)
-- [Blockchain](#-blockchain)
-- [ML Verification](#-ml-verification)
-- [Development Commands](#-development-commands)
-- [Contributing](#-contributing)
+- [Installation](#-installation)
+  - [Option A — Manual Setup (Recommended for Dev)](#option-a--manual-setup-recommended-for-dev)
+  - [Option B — Docker Setup](#option-b--docker-setup)
+- [Running the Services](#-running-the-services)
+- [API Reference](#-api-reference)
+- [Frontend Pages & Components](#-frontend-pages--components)
+- [ML Verification Module](#-ml-verification-module)
+- [Blockchain Module](#-blockchain-module)
+- [Useful Dev Commands](#-useful-dev-commands)
 - [License](#-license)
 
 ---
 
-## 🌍 Overview
+## 🌍 Project Overview
 
-**CarbonCred** is a comprehensive decentralized carbon credit marketplace built for the Indian Carbon Credit Trading Scheme (CCTS). It enables transparent, secure, and efficient trading of carbon credits using blockchain technology with AI-powered verification.
-
-The platform allows:
-- 🌳 **Green Projects** to submit projects and earn verified carbon credits
-- 🏭 **Organizations** to purchase credits for compliance
-- 🔍 **Auditors** to verify projects using ML-powered analysis
-- 💱 **Marketplace** for peer-to-peer credit trading
+**CarbonCred** is a full-stack platform for the Indian Carbon Credit Trading Scheme (CCTS). It lets green projects submit and earn verified carbon credits, organizations buy credits for compliance, and auditors verify projects using an AI-powered pipeline — all backed by Ethereum smart contracts.
 
 ---
 
-## ✨ Features
+## 🧰 Tech Stack
 
-### Core Features
-- ✅ User registration and JWT authentication
-- ✅ Project submission with image uploads
-- ✅ AI-powered vegetation and solar project verification
-- ✅ Carbon credit issuance and tracking
-- ✅ Peer-to-peer marketplace for credit trading
-- ✅ Blockchain-based credit minting (ERC-20 tokens)
-- ✅ Transaction history and portfolio management
-
-### Technical Features
-- 🔐 Secure JWT-based authentication
-- 📊 Comprehensive REST API with Swagger documentation
-- 🎨 Modern React UI with Tailwind CSS
-- ⛓️ Ethereum smart contracts (Sepolia Testnet)
-- 🤖 TensorFlow ML models for project verification
-- 🐳 Docker-ready deployment
-- 📱 Responsive design for mobile and desktop
-
----
-
-## 🏗 Architecture
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                         CarbonCred Platform                          │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                      │
-│  ┌──────────────┐    ┌──────────────┐    ┌──────────────────────┐  │
-│  │   Frontend   │    │   Backend    │    │   ML Verification    │  │
-│  │  React/Vite  │◄──►│  Django DRF  │◄──►│  TensorFlow/Keras    │  │
-│  │  Tailwind    │    │  PostgreSQL  │    │  UNet + ResNet       │  │
-│  └──────────────┘    └──────────────┘    └──────────────────────┘  │
-│         │                   │                                        │
-│         │                   ▼                                        │
-│         │            ┌──────────────┐                               │
-│         └───────────►│  Blockchain  │                               │
-│                      │  Ethereum    │                               │
-│                      │  Sepolia     │                               │
-│                      └──────────────┘                               │
-│                                                                      │
-└─────────────────────────────────────────────────────────────────────┘
-```
+| Layer | Technology |
+|-------|-----------|
+| **Backend** | Django 4.2, Django REST Framework, SimpleJWT |
+| **Database** | PostgreSQL 16 |
+| **Frontend** | React 19, Vite 7, Tailwind CSS 4, Bootstrap 5 |
+| **Blockchain** | Ethereum (Sepolia Testnet), Hardhat, web3.py |
+| **ML / AI** | TensorFlow 2.13, UNet (vegetation), ResNet50 (solar) |
+| **API Docs** | Swagger UI / ReDoc (drf-yasg) |
+| **Containerisation** | Docker, Docker Compose |
 
 ---
 
@@ -99,353 +59,420 @@ The platform allows:
 
 ```
 carboncred/
-├── accounts/              # User authentication & profiles
-├── backend/               # Django project settings
+├── accounts/            # User auth, registration, JWT, profiles
+├── analytics/           # Platform-wide & user analytics APIs
+├── backend/             # Django project settings, URLs, WSGI/ASGI
 │   ├── settings.py
 │   ├── urls.py
 │   └── wsgi.py
-├── blockchain/            # Ethereum smart contracts
+├── blockchain/          # Ethereum smart contracts & deploy scripts
 │   ├── contracts/
 │   │   ├── CarbonCredToken.sol
 │   │   └── IndianCarbonCredit.sol
 │   ├── scripts/
 │   └── hardhat.config.js
-├── credits/               # Carbon credit models & wallet
-├── frontend/              # React + Vite application
+├── credits/             # Credit wallet, issuance, balance tracking
+├── marketplace/         # Buy/sell listings and credit trading
+├── ml-verification/     # AI verification pipeline
 │   ├── src/
-│   │   ├── components/
-│   │   ├── hooks/
-│   │   └── App.jsx
-│   └── package.json
-├── marketplace/           # Credit trading marketplace
-├── ml-verification/       # ML verification pipeline
-│   ├── src/
-│   │   ├── models/
+│   │   ├── models/      # UNet + ResNet50 model definitions
 │   │   ├── train.py
 │   │   └── verify.py
 │   └── requirements.txt
-├── projects/              # Project management
-├── transactions/          # Transaction history
-├── media/                 # Uploaded files
-├── docker-compose.yml     # Docker configuration
-├── manage.py              # Django management
-├── requirements.txt       # Python dependencies
-├── LICENSE                # MIT License
-└── README.md              # This file
+├── projects/            # Project submission and management
+├── transactions/        # Transaction history records
+├── frontend/            # React + Vite application
+│   ├── src/
+│   │   ├── components/  # All UI pages and components
+│   │   ├── hooks/
+│   │   └── App.jsx
+│   └── package.json
+├── media/               # Uploaded project images
+├── docker-compose.yml
+├── manage.py
+├── requirements.txt
+└── .env.example
 ```
 
 ---
 
 ## 📋 Prerequisites
 
-- **Python** 3.9+
-- **Node.js** 16.x+
-- **PostgreSQL** 13+ (local or Docker)
-- **Docker & Docker Compose** (recommended)
-- **MetaMask** browser extension (for blockchain)
-
----
-
-## 🚀 Installation
-
-### Quick Start with Docker
-
-```bash
-# 1. Clone the repository
-git clone https://github.com/Prathameshjain/carboncred.git
-cd carboncred
-
-# 2. Copy environment file
-cp .env.example .env
-# Edit .env with your configuration
-
-# 3. Start all services
-docker-compose up -d
-
-# 4. Run migrations
-docker-compose exec backend python manage.py migrate
-
-# 5. Create superuser (optional)
-docker-compose exec backend python manage.py createsuperuser
-```
-
-### Manual Installation
-
-#### Backend Setup
-
-```bash
-# 1. Create virtual environment
-python3 -m venv venv
-source venv/bin/activate  # Windows: .\venv\Scripts\activate
-
-# 2. Install dependencies
-pip install -r requirements.txt
-
-# 3. Start PostgreSQL (via Docker or local)
-docker-compose up -d db
-
-# 4. Apply migrations
-python manage.py migrate
-
-# 5. Start development server
-python manage.py runserver
-```
-
-#### Frontend Setup
-
-```bash
-cd frontend
-
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-```
-
-#### Blockchain Setup
-
-```bash
-cd blockchain
-
-# Install dependencies
-npm install
-
-# Compile contracts
-npx hardhat compile
-
-# Deploy to Sepolia (requires .env configuration)
-npx hardhat run scripts/deploy.js --network sepolia
-```
-
-#### ML Verification Setup
-
-```bash
-cd ml-verification
-
-# Create virtual environment
-python3 -m venv venv
-source venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Train models (optional - pre-trained models available)
-cd src
-python train.py --task vegetation
-python train.py --task solar
-```
+| Tool | Version |
+|------|---------|
+| Python | 3.9+ |
+| Node.js | 16.x+ |
+| npm | 8.x+ |
+| PostgreSQL | 13+ *(or use Docker)* |
+| Docker & Docker Compose | Latest *(optional)* |
+| MetaMask | Browser extension *(for blockchain features)* |
 
 ---
 
 ## 🔐 Environment Variables
 
-Create a `.env` file in the root directory:
-
-```env
-# Database Configuration
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=your_password
-POSTGRES_DB=carboncred
-POSTGRES_HOST=127.0.0.1
-POSTGRES_PORT=5432
-
-# Blockchain Configuration (Sepolia Testnet)
-ALCHEMY_URL=https://eth-sepolia.g.alchemy.com/v2/YOUR_KEY
-BLOCKCHAIN_PRIVATE_KEY=YOUR_DEPLOYER_PRIVATE_KEY
-CONTRACT_ADDRESS=YOUR_DEPLOYED_CONTRACT_ADDRESS
-BLOCKCHAIN_CHAIN_ID=11155111
-
-# Django Settings (production)
-SECRET_KEY=your-secret-key
-DEBUG=True
-ALLOWED_HOSTS=localhost,127.0.0.1
-```
-
----
-
-## 🐳 Docker Setup
-
-### Development
+Copy `.env.example` to `.env` and fill in your values:
 
 ```bash
-# Start all services
-docker-compose up -d
-
-# View logs
-docker-compose logs -f
-
-# Stop services
-docker-compose down
+cp .env.example .env
 ```
 
-### Services
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `POSTGRES_USER` | PostgreSQL username | `postgres` |
+| `POSTGRES_PASSWORD` | PostgreSQL password | `yourpassword` |
+| `POSTGRES_DB` | Database name | `carboncred` |
+| `POSTGRES_HOST` | DB host | `127.0.0.1` |
+| `POSTGRES_PORT` | DB port | `5432` |
+| `SECRET_KEY` | Django secret key | `your-secret-key` |
+| `DEBUG` | Debug mode | `True` |
+| `ALLOWED_HOSTS` | Comma-separated hosts | `localhost,127.0.0.1` |
+| `ALCHEMY_URL` | Alchemy RPC endpoint (Sepolia) | `https://eth-sepolia.g.alchemy.com/v2/KEY` |
+| `BLOCKCHAIN_PRIVATE_KEY` | Deployer wallet private key | `0x...` |
+| `CONTRACT_ADDRESS` | Deployed contract address | `0x...` |
+| `BLOCKCHAIN_CHAIN_ID` | Sepolia chain ID | `11155111` |
+| `REACT_APP_API_URL` | Backend base URL for frontend | `http://127.0.0.1:8000` |
+| `REACT_APP_CONTRACT_ADDRESS` | Contract address for frontend | `0x...` |
 
-| Service | Port | Description |
-|---------|------|-------------|
-| PostgreSQL | 5432 | Database |
-| Django | 8000 | Backend API |
-| React | 5173 | Frontend |
-
----
-
-## 📚 API Documentation
-
-Once the backend is running, access the API docs:
-
-- **Swagger UI**: http://127.0.0.1:8000/swagger/
-- **ReDoc**: http://127.0.0.1:8000/redoc/
-
-### Key Endpoints
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/accounts/register/` | POST | User registration |
-| `/api/accounts/login/` | POST | JWT token login |
-| `/api/accounts/refresh/` | POST | Refresh JWT token |
-| `/api/projects/` | GET/POST | List/Create projects |
-| `/api/credits/wallet/` | GET | User's credit wallet |
-| `/api/marketplace/listings/` | GET/POST | Marketplace listings |
-| `/api/transactions/` | GET | Transaction history |
+> ⚠️ **Never commit real private keys or secrets.** Keep `.env` in `.gitignore`.
 
 ---
 
-## 🎨 Frontend
+## 🚀 Installation
 
-The frontend is built with:
-- **React 19** - UI framework
-- **Vite 7** - Build tool
-- **Tailwind CSS 4** - Styling
-- **Framer Motion** - Animations
-- **Recharts** - Data visualization
-- **Axios** - API client
+### Option A — Manual Setup (Recommended for Dev)
 
-### Available Scripts
+#### 1. Clone the Repository
+
+```bash
+git clone https://github.com/Prathameshjain/carboncred.git
+cd carboncred
+```
+
+#### 2. Backend Setup
+
+```bash
+# Create & activate virtual environment
+python3 -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+
+# Install Python dependencies
+pip install -r requirements.txt
+
+# Configure environment
+cp .env.example .env
+# Edit .env with your database credentials and keys
+
+# Apply database migrations
+python manage.py migrate
+
+# (Optional) Create a Django admin superuser
+python manage.py createsuperuser
+```
+
+#### 3. Frontend Setup
 
 ```bash
 cd frontend
 
-npm run dev      # Development server (http://localhost:5173)
-npm run build    # Production build
-npm run preview  # Preview production build
-npm run lint     # ESLint check
+# Install Node dependencies
+npm install
+```
+
+#### 4. ML Verification Setup *(optional — only needed for training/verifying)*
+
+```bash
+cd ml-verification
+
+python3 -m venv venv
+source venv/bin/activate
+
+pip install -r requirements.txt
+```
+
+#### 5. Blockchain Setup *(optional — only needed for contract work)*
+
+```bash
+cd blockchain
+
+npm install
+
+# Compile contracts
+npx hardhat compile
+
+# Deploy to Sepolia (ensure ALCHEMY_URL and BLOCKCHAIN_PRIVATE_KEY are set in .env)
+npx hardhat run scripts/deploy.js --network sepolia
 ```
 
 ---
 
-## ⛓️ Blockchain
+### Option B — Docker Setup
 
-### Smart Contracts
+The `docker-compose.yml` defines three service profiles:
 
-1. **IndianCarbonCredit.sol** - Main contract for the Indian Carbon Credit Trading Scheme
-2. **CarbonCredToken.sol** - ERC-20 token for carbon credits
+| Profile | Services Included |
+|---------|------------------|
+| *(default)* | `db` (PostgreSQL only) |
+| `full` | `db` + `backend` + `frontend` |
+| `cache` | `db` + `redis` |
 
-### Network Configuration
+```bash
+# Start only the database (most common for local dev)
+docker-compose up -d
 
-The contracts are deployed on **Sepolia Testnet**:
-- Chain ID: 11155111
-- RPC: Alchemy or Infura
+# Start all services (full Docker stack)
+docker-compose --profile full up -d
 
-### Testing Flow
+# Run migrations inside the container
+docker-compose exec backend python manage.py migrate
 
-1. **Auditor** submits industry/forestry data
-2. **Organization** views compliance status, posts buy requests
-3. **Green Project** fulfills requests, transfers credits
-4. **Organization** retires credits for compliance
+# Create superuser inside the container
+docker-compose exec backend python manage.py createsuperuser
+
+# View logs
+docker-compose logs -f
+
+# Stop all services
+docker-compose down
+```
 
 ---
 
-## 🤖 ML Verification
+## ▶️ Running the Services
 
-### Models
+| Service | Command | URL |
+|---------|---------|-----|
+| **Backend** (Django) | `python manage.py runserver` | http://127.0.0.1:8000 |
+| **Frontend** (Vite) | `cd frontend && npm run dev` | http://localhost:5173 |
+| **Swagger Docs** | *(backend must be running)* | http://127.0.0.1:8000/swagger/ |
+| **ReDoc** | *(backend must be running)* | http://127.0.0.1:8000/redoc/ |
+| **Django Admin** | *(backend must be running)* | http://127.0.0.1:8000/admin/ |
+| **PostgreSQL** | `docker-compose up -d` | `localhost:5432` |
+
+> Both the backend and frontend dev servers support **hot reload** — changes take effect without restarting.
+
+---
+
+## 📚 API Reference
+
+All endpoints are prefixed with `/api/`. Full interactive docs available at `/swagger/` when `DEBUG=True`.
+
+### Accounts (`/api/accounts/`)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/accounts/register/` | POST | Register a new user |
+| `/api/accounts/login/` | POST | Obtain JWT access & refresh tokens |
+| `/api/accounts/refresh/` | POST | Refresh access token |
+| `/api/accounts/profile/` | GET / PATCH | Get or update user profile |
+
+### Projects (`/api/projects/`)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/projects/` | GET / POST | List or submit a new project |
+| `/api/projects/<id>/` | GET / PATCH | Get or update project details |
+| `/api/projects/<id>/verify/` | POST | Trigger ML verification on a project |
+
+### Credits (`/api/credits/`)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/credits/wallet/` | GET | Get current user's credit balance |
+| `/api/credits/issue/` | POST | Issue credits to a project (admin) |
+
+### Marketplace (`/api/marketplace/`)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/marketplace/listings/` | GET / POST | View or create credit listings |
+| `/api/marketplace/listings/<id>/buy/` | POST | Purchase a listing |
+
+### Transactions (`/api/transactions/`)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/transactions/` | GET | View transaction history for current user |
+
+### Analytics (`/api/analytics/`)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/analytics/platform/` | GET | Platform-wide stats |
+| `/api/analytics/user/` | GET | Per-user analytics |
+
+---
+
+## 🎨 Frontend Pages & Components
+
+The frontend lives in `frontend/src/components/`. Key pages:
+
+| Component | Route | Description |
+|-----------|-------|-------------|
+| `Home.jsx` | `/` | Landing page |
+| `Registration.jsx` | `/register` | User sign-up |
+| `Login.jsx` | `/login` | JWT login |
+| `Dashboard.jsx` | `/dashboard` | Main user dashboard |
+| `AddProject.jsx` | `/projects/add` | Submit a new carbon project |
+| `ViewProjects.jsx` | `/projects` | Browse existing projects |
+| `Marketplace.jsx` | `/marketplace` | Buy/sell credit listings |
+| `Mycredits.jsx` | `/credits` | Credit wallet & history |
+| `PurchaseHistory.jsx` | `/history` | Transaction history |
+| `VerificationReport.jsx` | `/verification` | ML verification results |
+| `UserAnalytics.jsx` | `/analytics/user` | User-level charts |
+| `PlatformAnalytics.jsx` | `/analytics/platform` | Platform-wide charts |
+| `Profile.jsx` | `/profile` | User profile management |
+
+### Frontend Scripts
+
+```bash
+cd frontend
+
+npm run dev       # Start dev server → http://localhost:5173
+npm run build     # Production build → dist/
+npm run preview   # Preview production build locally
+npm run lint      # Run ESLint
+```
+
+---
+
+## 🤖 ML Verification Module
+
+Located in `ml-verification/`. Runs as a standalone Python service integrated into the Django backend via `projects/verification_service.py`.
+
+### Supported Project Domains
+
+The platform supports **6 project classification types**. Each maps to a distinct verification strategy:
+
+| Classification | ML Type | Verification Approach | Key Inputs |
+|---------------|---------|----------------------|------------|
+| `VEGETATION` | `vegetation` | UNet image segmentation on NDVI satellite imagery | Satellite images, area (ha), claimed improvement % |
+| `PLANTATION` | `vegetation` | Same as VEGETATION — UNet + NDVI pipeline | Tree count, avg DBH (mm), avg height (cm), species factor |
+| `SOLAR` | `solar` | ResNet50 classification on RGB satellite imagery | Satellite images, energy generated (kWh), grid emission factor, efficiency % |
+| `METHANE` | `methane` | Numeric-only formula (no image ML) | Biogas volume (m³/year), methane fraction %, plant capacity (kW) |
+| `COOKSTOVE` | `cookstove` | Numeric-only formula (no image ML) | Stove count, wood saved (kg/stove/year), FNRB factor, emission factor, efficiency % |
+| `WIND` | `wind` | Numeric-only formula (no image ML) | Wind energy generated (kWh), grid emission factor, turbine efficiency %, turbine count |
+
+> `VEGETATION` and `PLANTATION` share the same ML pipeline. `METHANE`, `COOKSTOVE`, and `WIND` are **numeric-only** — they do not use image models; credits are calculated from domain-specific formulas.
+
+### ML Models
 
 | Model | Task | Input | Output |
 |-------|------|-------|--------|
-| UNet | Vegetation Segmentation | NDVI images (256×256) | Binary mask |
-| ResNet50 | Solar Classification | RGB images (256×256) | 3-class (no_site, construction, active) |
+| **UNet** | Vegetation/plantation segmentation | NDVI images (256×256) | Binary vegetation mask |
+| **ResNet50** | Solar site classification | RGB satellite images (256×256) | `no_site` / `construction` / `active` |
 
-### Verification Flow
+Model checkpoints are stored in `ml-verification/src/models/checkpoints/`:
+- `vegetation_unet_best.keras`
+- `solar_resnet_best.keras`
+
+### Running the ML Service
 
 ```bash
-cd ml-verification/src
+cd ml-verification
+source venv/bin/activate
 
-# Verify a vegetation project
-python verify.py --project veg_001
+# Train models
+python src/train.py --task vegetation
+python src/train.py --task solar
 
-# Verify a solar project
-python verify.py --project solar_001
+# Run verification on a project
+python src/verify.py --project veg_001     # vegetation / plantation
+python src/verify.py --project solar_001   # solar
 ```
 
-### Metrics
+### Verification Metrics
 
-- **Vegetation**: IoU (~0.73), Dice (~0.83), Temporal Consistency (~0.98)
-- **Solar**: Accuracy improves with training epochs
+| Domain | Key Metrics |
+|--------|------------|
+| Vegetation / Plantation | IoU ~0.73, Dice ~0.83, Temporal Consistency ~0.98 |
+| Solar | Solar probability score, estimated panel area (m²), avoided CO₂ (tCO₂/year) |
+| Methane | CO₂ equivalent tonnes/year from biogas formula |
+| Cookstove | Credits from wood-saved formula (FNRB-adjusted) |
+| Wind | Avoided CO₂ from wind energy × grid emission factor |
+
+### Verification Decision Flow
+
+1. Project submitted → classification stored in Django `Project` model
+2. `/api/projects/<id>/verify/` triggered → `ProjectVerificationService.verify_project()` called
+3. For **image domains** (vegetation, solar): images processed → ML inference runs
+4. For **numeric domains** (methane, cookstove, wind): formula-based calculation only
+5. Result saved as JSON report in `media/reports/<report_id>.json`
+6. Django model updated with `final_decision`, `confidence_score`, `estimated_co2_tco2_year`, and domain-specific fields
 
 ---
 
-## 💻 Development Commands
+## ⛓️ Blockchain Module
+
+Located in `blockchain/`. Uses **Hardhat** + **web3.py**.
+
+### Smart Contracts
+
+| Contract | Description |
+|----------|-------------|
+| `IndianCarbonCredit.sol` | Main CCTS contract |
+| `CarbonCredToken.sol` | ERC-20 carbon credit token |
+
+### Network
+
+- **Testnet:** Ethereum Sepolia (`chainId: 11155111`)
+- **RPC:** Alchemy (`ALCHEMY_URL` in `.env`)
+
+```bash
+cd blockchain
+
+npm install
+
+# Compile
+npx hardhat compile
+
+# Deploy to Sepolia
+npx hardhat run scripts/deploy.js --network sepolia
+```
+
+After deploying, copy the output contract address into `.env` as `CONTRACT_ADDRESS` and `REACT_APP_CONTRACT_ADDRESS`.
+
+---
+
+## 💻 Useful Dev Commands
 
 ### Backend
 
 ```bash
-# Activate virtual environment
-source venv/bin/activate
+source .venv/bin/activate
 
-# Run migrations
-python manage.py migrate
-
-# Create migrations
-python manage.py makemigrations
-
-# Start server
-python manage.py runserver
-
-# Create superuser
-python manage.py createsuperuser
-
-# Django shell
-python manage.py shell
+python manage.py runserver            # Start dev server
+python manage.py migrate              # Apply migrations
+python manage.py makemigrations       # Generate new migrations
+python manage.py createsuperuser      # Create admin user
+python manage.py shell                # Open Django shell
 ```
 
 ### Docker
 
 ```bash
-# Start services
-docker-compose up -d
-
-# Stop services
-docker-compose down
-
-# View logs
-docker-compose logs -f backend
-
-# Execute command in container
+docker-compose up -d                              # Start DB only
+docker-compose --profile full up -d               # Start all services
+docker-compose down                               # Stop all services
+docker-compose logs -f backend                    # Follow backend logs
 docker-compose exec backend python manage.py migrate
 ```
 
----
+### Frontend
 
-## 🤝 Contributing
-
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+```bash
+cd frontend
+npm install          # Install / update packages
+npm run dev          # Dev server
+npm run build        # Production build
+npm run lint         # Lint check
+```
 
 ---
 
 ## 📄 License
 
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 📧 Contact
-
-For questions or support, please open an issue in the repository.
+This project is licensed under the **MIT License** — see [LICENSE](LICENSE) for details.
 
 ---
 
@@ -453,6 +480,6 @@ For questions or support, please open an issue in the repository.
 
 **Built with ❤️ for a greener India 🌱**
 
-© 2025-2026 Prathameshjain
+© 2025–2026 Nesar Wagannawar , Prathamesh Jain , Aaditya Cholle , Suhani Shah
 
 </div>
