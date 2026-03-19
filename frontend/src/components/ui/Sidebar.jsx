@@ -1,4 +1,4 @@
-import { Home, Zap, ShoppingCart, Wallet, Users, Settings, ChevronLeft, ChevronRight } from "lucide-react";
+import { Home, Zap, ShoppingCart, Wallet, Users, Settings, ChevronLeft, ChevronRight, BarChart2 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Navbar from "./Navbar";
 import { useState } from "react";
@@ -10,6 +10,7 @@ const Sidebar = ({ sidebarOpen }) => {
   const menuItems = [
     { icon: Home, label: "Dashboard", path: "/Dashboard" },
     { icon: Zap, label: "Projects", path: "/Mycredits" },
+    { icon: BarChart2, label: "Analytics", path: "/Analytics" },
     { icon: ShoppingCart, label: "Marketplace", path: "/Marketplace" },
     { icon: Wallet, label: "History", path: "/PurchaseHistory" },
   ];

@@ -30,6 +30,7 @@ urlpatterns = [
     path('api/marketplace/', include('marketplace.urls')),
     path('api/transactions/', include('transactions.urls')),
     path('api/projects/', include('projects.urls')),
+    path('api/analytics/', include('analytics.urls')),
     
 
     # API Docs

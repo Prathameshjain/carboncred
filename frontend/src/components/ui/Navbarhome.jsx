@@ -12,6 +12,7 @@ function Navbarhome() {
                         <li><button className="d-flex navbar-items">Home</button></li>
                         <li><button className="d-flex navbar-items">About</button></li>
                         <li><button className="d-flex navbar-items">Contact</button></li>
+                        <li><button className="d-flex navbar-items" onClick={() => navigate("/PlatformStats")} >Platform Stats</button></li>
                         <li><button 
                         onClick={() => navigate("/login")}
                         className="d-flex login-btn navbar-items min-w-32 text-white border-none font-bold justify-center items-center" >Login</button></li>

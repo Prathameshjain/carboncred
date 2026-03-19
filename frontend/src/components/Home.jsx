@@ -24,9 +24,15 @@ export default function CarbonCredHomepage() {
                   Carbon<span className="text-green-600">Cred</span>
                 </span>
               </div>
-              <div className="flex space-x-8">
+              <div className="flex items-center gap-6">
+                <button
+                  onClick={() => navigate("/PlatformStats")}
+                  className="relative text-gray-900 font-medium pb-1 after:absolute after:left-0 after:-bottom-1 
+                  after:h-0.5 after:w-0 after:bg-green-500 after:transition-all after:duration-300 hover:after:w-full">
+                  Platform Stats
+                </button>
                 <button 
-                  onClick={()=>navigate("/Login")}
+                  onClick={() => navigate("/Login")}
                   className="relative text-gray-900 font-medium pb-1 after:absolute after:left-0 after:-bottom-1 
                   after:h-0.5 after:w-0 after:bg-green-500 after:transition-all after:duration-300 hover:after:w-full ">
                 Login</button>

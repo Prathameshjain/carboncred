@@ -9,6 +9,8 @@ import PurchaseHistory from "./components/PurchaseHistory";
 import AddProject from "./components/AddProject";
 import ViewProjects from "./components/ViewProjects";
 import Profile from "./components/Profile";
+import UserAnalytics from "./components/UserAnalytics";
+import PlatformAnalytics from "./components/PlatformAnalytics";
 import "./App.css";
 
 function App() {
@@ -25,6 +27,8 @@ function App() {
         <Route path="/AddProject" element={<AddProject/>}/>
         <Route path="/ViewProjects" element={<ViewProjects/>}/>
         <Route path="/Profile" element={<Profile/>}/>
+        <Route path="/Analytics" element={<UserAnalytics/>}/>
+        <Route path="/PlatformStats" element={<PlatformAnalytics/>}/>
       </Routes>
     </>
   );

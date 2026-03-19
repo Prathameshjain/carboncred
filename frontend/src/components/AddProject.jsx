@@ -111,7 +111,7 @@ const AddProject = () => {
   const [formData, setFormData] = useState({
     // Core fields
     project_name: "",
-    classification: "",
+    classification: "PLANTATION",
     project_area_hectares: "",
     project_cost_lakh_inr: "",
     claimed_improvement_pct: "",
@@ -408,9 +408,9 @@ const AddProject = () => {
                         : "border-slate-300"
                         } rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition`}
                     >
-                      <option value="">Select project type</option>
-                      <option value="SOLAR">Solar</option>
+                      <option value="" disabled>Select project type</option>
                       <option value="PLANTATION">Plantation</option>
+                      <option value="SOLAR">Solar</option>
                       <option value="METHANE">Methane / Biogas</option>
                       <option value="COOKSTOVE">Cookstove / ICS</option>
                       <option value="WIND">Wind Energy</option>
