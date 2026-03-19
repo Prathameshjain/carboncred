@@ -18,6 +18,87 @@ import Footer from "./ui/Footer";
 import { useNavigate, useLocation } from "react-router-dom";
 import GradientBg from "../assets/GradientBg.png";
 
+// ── Domain configuration ─────────────────────────────────────────────────────
+// Today's date string for max attribute on date inputs
+const TODAY = new Date().toISOString().split('T')[0];
+
+const DOMAIN_CONFIG = {
+  SOLAR: {
+    label: "Solar",
+    requiresImages: true,
+    requiresPhotos: false,
+    numericSection: {
+      title: "Solar Generation Data",
+      hint: "Enter your actual metered generation data. These values are used to calculate credits after ML image verification confirms your installation.",
+      fields: [
+        { name: "energy_generated_kwh", label: "Annual Energy Generated (kWh)", placeholder: "e.g. 5000000", type: "number", required: true },
+        { name: "grid_emission_factor", label: "Grid Emission Factor (scaled, e.g. 715 = 0.715 kg CO₂/kWh)", placeholder: "715", type: "number", required: true },
+        { name: "solar_efficiency_pct", label: "Panel Efficiency (%)", placeholder: "e.g. 98", type: "number", required: true },
+      ],
+    },
+  },
+  PLANTATION: {
+    label: "Plantation",
+    requiresImages: true,
+    requiresPhotos: false,
+    numericSection: {
+      title: "Tree Measurement Data",
+      hint: "Enter average measurements across your plantation. These are used to calculate carbon credits after ML verification confirms the plantation exists.",
+      fields: [
+        { name: "tree_count", label: "Total Number of Trees", placeholder: "e.g. 10000", type: "number", required: true },
+        { name: "avg_dbh_mm", label: "Average DBH — Diameter at Breast Height (mm)", placeholder: "e.g. 150", type: "number", required: true },
+        { name: "avg_height_cm", label: "Average Tree Height (cm)", placeholder: "e.g. 800", type: "number", required: true },
+        { name: "species_factor", label: "Species Factor (1–100, e.g. Teak=70, Softwood=40)", placeholder: "e.g. 70", type: "number", required: true },
+      ],
+    },
+  },
+  METHANE: {
+    label: "Methane / Biogas",
+    requiresImages: false,
+    requiresPhotos: false,
+    numericSection: {
+      title: "Biogas Plant Activity Data",
+      hint: "Enter data from your biogas plant meter records. Site photos are encouraged but not required.",
+      fields: [
+        { name: "biogas_volume_m3_year", label: "Annual Biogas Produced (m³/year)", placeholder: "e.g. 50000", type: "number", required: true },
+        { name: "methane_fraction_pct", label: "Methane Content (%)", placeholder: "e.g. 60", type: "number", required: true },
+        { name: "biogas_plant_capacity_kw", label: "Plant Capacity (kW)", placeholder: "e.g. 100", type: "number", required: false },
+      ],
+    },
+  },
+  COOKSTOVE: {
+    label: "Cookstove / ICS",
+    requiresImages: false,
+    requiresPhotos: true,
+    numericSection: {
+      title: "Cookstove Distribution Data",
+      hint: "Geotagged photos of installed stoves are mandatory. Enter distribution and usage data below.",
+      fields: [
+        { name: "stoves_count", label: "Number of Stoves Distributed and Verified", placeholder: "e.g. 5000", type: "number", required: true },
+        { name: "wood_saved_kg_per_stove_year", label: "Wood Saved per Stove per Year (kg)", placeholder: "e.g. 2000", type: "number", required: false },
+        { name: "fnrb_scaled", label: "Fraction of Non-Renewable Biomass — fNRB (e.g. 85 = 85%)", placeholder: "85", type: "number", required: false },
+        { name: "wood_emission_factor_scaled", label: "Wood Emission Factor (e.g. 150 = 1.5 kg CO₂/kg)", placeholder: "150", type: "number", required: false },
+        { name: "cookstove_efficiency_pct", label: "Stove Usage Rate / Efficiency (%)", placeholder: "e.g. 90", type: "number", required: false },
+      ],
+    },
+  },
+  WIND: {
+    label: "Wind Energy",
+    requiresImages: false,
+    requiresPhotos: false,
+    numericSection: {
+      title: "Wind Generation Data",
+      hint: "Enter metered generation data from DISCOM records or turbine logs. Site photos are encouraged.",
+      fields: [
+        { name: "wind_energy_generated_kwh", label: "Annual Energy Generated (kWh)", placeholder: "e.g. 8760000", type: "number", required: true },
+        { name: "wind_grid_emission_factor", label: "Grid Emission Factor (scaled, e.g. 715 = 0.715 kg CO₂/kWh)", placeholder: "715", type: "number", required: false },
+        { name: "wind_turbine_efficiency_pct", label: "Turbine Efficiency (%)", placeholder: "e.g. 90", type: "number", required: false },
+        { name: "wind_turbine_count", label: "Number of Turbines", placeholder: "e.g. 5", type: "number", required: false },
+      ],
+    },
+  },
+};
+
 const AddProject = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -28,6 +109,7 @@ const AddProject = () => {
 
   // Form state management - aligned with backend API
   const [formData, setFormData] = useState({
+    // Core fields
     project_name: "",
     classification: "",
     project_area_hectares: "",
@@ -39,6 +121,30 @@ const AddProject = () => {
     after_image: null,
     before_image_date: "",
     after_image_date: "",
+    // Plantation numeric inputs
+    tree_count: "",
+    avg_dbh_mm: "",
+    avg_height_cm: "",
+    species_factor: "",
+    // Solar numeric inputs
+    energy_generated_kwh: "",
+    grid_emission_factor: "",
+    solar_efficiency_pct: "",
+    // Methane numeric inputs
+    biogas_volume_m3_year: "",
+    methane_fraction_pct: "",
+    biogas_plant_capacity_kw: "",
+    // Cookstove numeric inputs
+    stoves_count: "",
+    wood_saved_kg_per_stove_year: "",
+    fnrb_scaled: "",
+    wood_emission_factor_scaled: "",
+    cookstove_efficiency_pct: "",
+    // Wind numeric inputs
+    wind_energy_generated_kwh: "",
+    wind_grid_emission_factor: "",
+    wind_turbine_efficiency_pct: "",
+    wind_turbine_count: "",
   });
 
   const [errors, setErrors] = useState({});
@@ -90,9 +196,24 @@ const AddProject = () => {
       }
     });
 
-    // At least one image required
-    if (!formData.before_image && !formData.after_image) {
-      newErrors.before_image = "At least one image is required";
+    // Domain-aware image / numeric validation
+    const cfg = DOMAIN_CONFIG[formData.classification];
+    if (cfg) {
+      if (cfg.requiresImages && !formData.before_image && !formData.after_image) {
+        newErrors.before_image = "At least one image is required for this domain";
+      }
+      if (cfg.requiresPhotos && !formData.before_image && !formData.after_image) {
+        newErrors.before_image = "Geotagged photos are mandatory for cookstove verification";
+      }
+      if (cfg.numericSection) {
+        cfg.numericSection.fields
+          .filter((f) => f.required)
+          .forEach((f) => {
+            if (!formData[f.name]) {
+              newErrors[f.name] = "This field is required";
+            }
+          });
+      }
     }
 
     setErrors(newErrors);
@@ -145,6 +266,22 @@ const AddProject = () => {
         submitData.append("after_image_date", formData.after_image_date);
       }
 
+      // Append all numeric domain fields that have values
+      const numericFieldNames = [
+        "tree_count", "avg_dbh_mm", "avg_height_cm", "species_factor",
+        "energy_generated_kwh", "grid_emission_factor", "solar_efficiency_pct",
+        "biogas_volume_m3_year", "methane_fraction_pct", "biogas_plant_capacity_kw",
+        "stoves_count", "wood_saved_kg_per_stove_year", "fnrb_scaled",
+        "wood_emission_factor_scaled", "cookstove_efficiency_pct",
+        "wind_energy_generated_kwh", "wind_grid_emission_factor",
+        "wind_turbine_efficiency_pct", "wind_turbine_count",
+      ];
+      numericFieldNames.forEach((fieldName) => {
+        if (formData[fieldName] !== "" && formData[fieldName] !== null) {
+          submitData.append(fieldName, formData[fieldName]);
+        }
+      });
+
       const response = await axios.post(
         "http://127.0.0.1:8000/api/projects/projects/",
         submitData,
@@ -163,10 +300,10 @@ const AddProject = () => {
           : `Project ${response.data.final_decision}. Check details below.`
       );
       setTimeout(() => setToastMessage(null), 5000);
-
     } catch (error) {
       console.error("Project submission error:", error.response?.data || error);
-      const errorMsg = error.response?.data?.detail ||
+      const errorMsg =
+        error.response?.data?.detail ||
         error.response?.data?.before_image?.[0] ||
         "Failed to submit project";
       setToastMessage(errorMsg);
@@ -271,17 +408,19 @@ const AddProject = () => {
                         : "border-slate-300"
                         } rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition`}
                     >
-                      <option value="">Select classification</option>
+                      <option value="">Select project type</option>
                       <option value="SOLAR">Solar</option>
-                      <option value="VEGETATION">Vegetation</option>
                       <option value="PLANTATION">Plantation</option>
-                      <option value="METHANE">Methane</option>
+                      <option value="METHANE">Methane / Biogas</option>
+                      <option value="COOKSTOVE">Cookstove / ICS</option>
+                      <option value="WIND">Wind Energy</option>
                     </select>
                     {errors.classification && (
                       <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
                         <AlertCircle className="w-3 h-3" /> {errors.classification}
                       </p>
                     )}
+
                   </div>
 
                   {/* Project Area */}
@@ -359,11 +498,56 @@ const AddProject = () => {
                       </p>
                     )}
                     <p className="text-xs text-slate-500 mt-1">
-                      Your claimed vegetation/solar improvement percentage
+                      Your claimed vegetation/solar/energy improvement percentage
                     </p>
                   </div>
                 </div>
               </div>
+
+              {/* ========== SECTION D: DOMAIN-SPECIFIC NUMERIC INPUTS ========== */}
+              {formData.classification &&
+                DOMAIN_CONFIG[formData.classification]?.numericSection && (
+                  <div className="bg-white rounded-lg shadow-sm border border-emerald-200 p-6">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
+                        <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h2 className="text-lg font-semibold text-slate-800">
+                          {DOMAIN_CONFIG[formData.classification].numericSection.title}
+                        </h2>
+                        <p className="text-xs text-slate-500">
+                          {DOMAIN_CONFIG[formData.classification].numericSection.hint}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {DOMAIN_CONFIG[formData.classification].numericSection.fields.map((field) => (
+                        <div key={field.name}>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">
+                            {field.label}
+                            {field.required && <span className="text-red-500"> *</span>}
+                          </label>
+                          <input
+                            type={field.type}
+                            name={field.name}
+                            value={formData[field.name]}
+                            onChange={handleChange}
+                            placeholder={field.placeholder}
+                            className={`w-full px-4 py-2.5 border ${errors[field.name] ? "border-red-500" : "border-slate-300"} rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition`}
+                          />
+                          {errors[field.name] && (
+                            <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                              <AlertCircle className="w-3 h-3" /> {errors[field.name]}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
               {/* ========== SECTION B: LOCATION DETAILS ========== */}
               <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
@@ -443,6 +627,19 @@ const AddProject = () => {
                   <div>
                     <h2 className="text-lg font-semibold text-slate-800">
                       Project Images
+                      {formData.classification && DOMAIN_CONFIG[formData.classification] &&
+                        !DOMAIN_CONFIG[formData.classification].requiresImages &&
+                        !DOMAIN_CONFIG[formData.classification].requiresPhotos && (
+                          <span className="ml-2 text-sm font-normal text-slate-400">
+                            (optional for this domain)
+                          </span>
+                        )}
+                      {formData.classification &&
+                        DOMAIN_CONFIG[formData.classification]?.requiresPhotos && (
+                          <span className="ml-2 text-sm font-normal text-red-500">
+                            — geotagged photos required
+                          </span>
+                        )}
                     </h2>
                     <p className="text-xs text-slate-500">
                       Upload before and after satellite/drone images for ML verification
@@ -454,30 +651,49 @@ const AddProject = () => {
                   {/*  Image 1 */}
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Image 1 <span className="text-red-500">*</span>
+                      Image 1{" "}
+                      {formData.classification &&
+                        DOMAIN_CONFIG[formData.classification]?.requiresImages && (
+                          <span className="text-red-500">*</span>
+                        )}
+                      {formData.classification &&
+                        DOMAIN_CONFIG[formData.classification]?.requiresPhotos && (
+                          <span className="text-red-500">*</span>
+                        )}
                     </label>
-                    <div className={`border-2 border-dashed ${errors.before_image ? 'border-red-500' : 'border-slate-300'} rounded-lg p-4 text-center hover:border-emerald-500 transition`}>
+                    <div
+                      className={`border-2 border-dashed ${errors.before_image ? "border-red-500" : "border-slate-300"
+                        } rounded-lg p-4 text-center hover:border-emerald-500 transition`}
+                    >
                       {formData.before_image ? (
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <CheckCircle className="w-5 h-5 text-emerald-600" />
-                            <span className="text-sm text-slate-700">{formData.before_image.name}</span>
+                            <span className="text-sm text-slate-700">
+                              {formData.before_image.name}
+                            </span>
                           </div>
-                          <button onClick={() => removeImage('before_image')} className="text-red-500 hover:text-red-700">
+                          <button
+                            onClick={() => removeImage("before_image")}
+                            className="text-red-500 hover:text-red-700"
+                          >
                             <X className="w-5 h-5" />
                           </button>
                         </div>
                       ) : (
                         <>
                           <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-                          <label htmlFor="beforeImage" className="text-emerald-600 font-medium cursor-pointer hover:underline text-sm">
+                          <label
+                            htmlFor="beforeImage"
+                            className="text-emerald-600 font-medium cursor-pointer hover:underline text-sm"
+                          >
                             Click to upload image
                           </label>
                           <input
                             id="beforeImage"
                             type="file"
                             accept="image/*"
-                            onChange={(e) => handleImageUpload(e, 'before_image')}
+                            onChange={(e) => handleImageUpload(e, "before_image")}
                             className="hidden"
                           />
                         </>
@@ -489,12 +705,15 @@ const AddProject = () => {
                       </p>
                     )}
                     <div className="mt-2">
-                      <label className="block text-xs text-slate-500 mb-1">Capture Date</label>
+                      <label className="block text-xs text-slate-500 mb-1">
+                        Capture Date
+                      </label>
                       <input
                         type="date"
                         name="before_image_date"
                         value={formData.before_image_date}
                         onChange={handleChange}
+                        max={TODAY}
                         className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg"
                       />
                     </div>
@@ -510,35 +729,46 @@ const AddProject = () => {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <CheckCircle className="w-5 h-5 text-emerald-600" />
-                            <span className="text-sm text-slate-700">{formData.after_image.name}</span>
+                            <span className="text-sm text-slate-700">
+                              {formData.after_image.name}
+                            </span>
                           </div>
-                          <button onClick={() => removeImage('after_image')} className="text-red-500 hover:text-red-700">
+                          <button
+                            onClick={() => removeImage("after_image")}
+                            className="text-red-500 hover:text-red-700"
+                          >
                             <X className="w-5 h-5" />
                           </button>
                         </div>
                       ) : (
                         <>
                           <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-                          <label htmlFor="afterImage" className="text-emerald-600 font-medium cursor-pointer hover:underline text-sm">
+                          <label
+                            htmlFor="afterImage"
+                            className="text-emerald-600 font-medium cursor-pointer hover:underline text-sm"
+                          >
                             Click to upload image 2
                           </label>
                           <input
                             id="afterImage"
                             type="file"
                             accept="image/*"
-                            onChange={(e) => handleImageUpload(e, 'after_image')}
+                            onChange={(e) => handleImageUpload(e, "after_image")}
                             className="hidden"
                           />
                         </>
                       )}
                     </div>
                     <div className="mt-2">
-                      <label className="block text-xs text-slate-500 mb-1">Capture Date</label>
+                      <label className="block text-xs text-slate-500 mb-1">
+                        Capture Date
+                      </label>
                       <input
                         type="date"
                         name="after_image_date"
                         value={formData.after_image_date}
                         onChange={handleChange}
+                        max={TODAY}
                         className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg"
                       />
                     </div>
@@ -554,10 +784,20 @@ const AddProject = () => {
 
               {/* ========== VERIFICATION RESULT ========== */}
               {verificationResult && (
-                <div className={`bg-white rounded-lg shadow-sm border ${verificationResult.final_decision === 'VERIFIED' ? 'border-emerald-300' : 'border-amber-300'} p-6`}>
+                <div
+                  className={`bg-white rounded-lg shadow-sm border ${verificationResult.final_decision === "VERIFIED"
+                    ? "border-emerald-300"
+                    : "border-amber-300"
+                    } p-6`}
+                >
                   <div className="flex items-center gap-3 mb-4">
-                    <div className={`w-10 h-10 rounded-lg ${verificationResult.final_decision === 'VERIFIED' ? 'bg-emerald-100' : 'bg-amber-100'} flex items-center justify-center`}>
-                      {verificationResult.final_decision === 'VERIFIED' ? (
+                    <div
+                      className={`w-10 h-10 rounded-lg ${verificationResult.final_decision === "VERIFIED"
+                        ? "bg-emerald-100"
+                        : "bg-amber-100"
+                        } flex items-center justify-center`}
+                    >
+                      {verificationResult.final_decision === "VERIFIED" ? (
                         <CheckCircle className="w-5 h-5 text-emerald-600" />
                       ) : (
                         <AlertCircle className="w-5 h-5 text-amber-600" />
@@ -576,24 +816,65 @@ const AddProject = () => {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                     <div className="bg-slate-50 p-3 rounded-lg">
                       <p className="text-xs text-slate-500">Confidence Score</p>
-                      <p className="text-lg font-semibold text-slate-800">{(parseFloat(verificationResult.confidence_score) * 100).toFixed(1)}%</p>
+                      <p className="text-lg font-semibold text-slate-800">
+                        {(
+                          parseFloat(verificationResult.confidence_score) * 100
+                        ).toFixed(1)}
+                        %
+                      </p>
                     </div>
                     <div className="bg-slate-50 p-3 rounded-lg">
                       <p className="text-xs text-slate-500">Claim Alignment</p>
-                      <p className="text-lg font-semibold text-slate-800">{verificationResult.claim_alignment}</p>
+                      <p className="text-lg font-semibold text-slate-800">
+                        {verificationResult.claim_alignment}
+                      </p>
                     </div>
                     <div className="bg-slate-50 p-3 rounded-lg">
                       <p className="text-xs text-slate-500">Est. CO₂ (tCO₂/year)</p>
-                      <p className="text-lg font-semibold text-slate-800">{verificationResult.estimated_co2_tco2_year || 'N/A'}</p>
+                      <p className="text-lg font-semibold text-slate-800">
+                        {verificationResult.estimated_co2_tco2_year || "N/A"}
+                      </p>
                     </div>
                     <div className="bg-slate-50 p-3 rounded-lg">
                       <p className="text-xs text-slate-500">Credits Issued</p>
-                      <p className="text-lg font-semibold text-emerald-600">{verificationResult.credits_issued}</p>
+                      <p className="text-lg font-semibold text-emerald-600">
+                        {verificationResult.credits_issued}
+                      </p>
                     </div>
                   </div>
 
+                  {/* Formula credits row (shown when available) */}
+                  {verificationResult.formula_computed_credits != null && (
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+                      <div className="bg-emerald-50 p-3 rounded-lg">
+                        <p className="text-xs text-slate-500">Formula Credits</p>
+                        <p className="text-lg font-semibold text-emerald-700">
+                          {verificationResult.formula_computed_credits}
+                        </p>
+                      </div>
+                      {verificationResult.ml_estimated_credits != null && (
+                        <div className="bg-blue-50 p-3 rounded-lg">
+                          <p className="text-xs text-slate-500">ML Estimated Credits</p>
+                          <p className="text-lg font-semibold text-blue-700">
+                            {verificationResult.ml_estimated_credits}
+                          </p>
+                        </div>
+                      )}
+                      {verificationResult.cross_check_gap_pct != null && (
+                        <div className="bg-amber-50 p-3 rounded-lg">
+                          <p className="text-xs text-slate-500">Cross-check Gap</p>
+                          <p className="text-lg font-semibold text-amber-700">
+                            {parseFloat(verificationResult.cross_check_gap_pct).toFixed(1)}%
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   <div className="bg-slate-50 p-4 rounded-lg">
-                    <p className="text-sm text-slate-700 whitespace-pre-line">{verificationResult.explanation}</p>
+                    <p className="text-sm text-slate-700 whitespace-pre-line">
+                      {verificationResult.explanation}
+                    </p>
                   </div>
                 </div>
               )}
@@ -601,7 +882,7 @@ const AddProject = () => {
               {/* ========== ACTION BUTTONS ========== */}
               <div className="flex items-center justify-end gap-4 bg-white rounded-lg shadow-sm border border-slate-200 p-6">
                 <button
-                  onClick={() => navigate('/dashboard')}
+                  onClick={() => navigate("/dashboard")}
                   className="px-6 py-2.5 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 transition flex items-center gap-2 font-medium"
                 >
                   Cancel
@@ -610,7 +891,7 @@ const AddProject = () => {
                 {/* Show different buttons based on verification status */}
                 {verificationResult ? (
                   <button
-                    onClick={() => navigate('/ViewProjects')}
+                    onClick={() => navigate("/ViewProjects")}
                     className="px-6 py-2.5 rounded-lg text-white transition flex items-center gap-2 font-medium shadow-md bg-emerald-600 hover:bg-emerald-700"
                   >
                     <CheckCircle className="w-4 h-4" />
@@ -621,15 +902,27 @@ const AddProject = () => {
                     onClick={handleSubmit}
                     disabled={loading}
                     className={`px-6 py-2.5 rounded-lg text-white transition flex items-center gap-2 font-medium shadow-md ${loading
-                      ? 'bg-gray-400 cursor-not-allowed'
-                      : 'bg-emerald-600 hover:bg-emerald-700'
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-emerald-600 hover:bg-emerald-700"
                       }`}
                   >
                     {loading ? (
                       <>
                         <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            fill="none"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
                         </svg>
                         Processing...
                       </>

@@ -9,10 +9,12 @@ class Project(models.Model):
     """
     
     CLASSIFICATION_CHOICES = [
-        ('SOLAR', 'Solar'),
+        ('SOLAR',      'Solar'),
         ('VEGETATION', 'Vegetation'),
         ('PLANTATION', 'Plantation'),
-        ('METHANE', 'Methane'),
+        ('METHANE',    'Methane'),
+        ('COOKSTOVE',  'Cookstove / ICS'),
+        ('WIND',       'Wind Energy'),
     ]
 
     FINAL_DECISION_CHOICES = [
@@ -147,6 +149,99 @@ class Project(models.Model):
         max_digits=12, decimal_places=2, null=True, blank=True
     )
     land_use_conflict = models.BooleanField(null=True, blank=True)
+
+    # ========== PLANTATION NUMERIC INPUTS ==========
+    tree_count = models.PositiveIntegerField(null=True, blank=True)
+    avg_dbh_mm = models.PositiveIntegerField(
+        null=True, blank=True,
+        help_text='Average Diameter at Breast Height in millimeters'
+    )
+    avg_height_cm = models.PositiveIntegerField(
+        null=True, blank=True,
+        help_text='Average tree height in centimeters'
+    )
+    species_factor = models.PositiveIntegerField(
+        null=True, blank=True,
+        help_text='Species wood density factor 1-100 e.g. Teak=70 Softwood=40'
+    )
+
+    # ========== SOLAR NUMERIC INPUTS ==========
+    energy_generated_kwh = models.BigIntegerField(
+        null=True, blank=True,
+        help_text='Annual energy generated in kWh'
+    )
+    grid_emission_factor = models.PositiveIntegerField(
+        null=True, blank=True,
+        help_text='Scaled grid emission factor e.g. 715 means 0.715 kg CO2/kWh'
+    )
+    solar_efficiency_pct = models.PositiveIntegerField(
+        null=True, blank=True,
+        help_text='Panel efficiency percentage e.g. 98 means 98 percent'
+    )
+
+    # ========== METHANE NUMERIC INPUTS ==========
+    biogas_volume_m3_year = models.DecimalField(
+        max_digits=14, decimal_places=2, null=True, blank=True,
+        help_text='Annual biogas produced in cubic meters per year'
+    )
+    methane_fraction_pct = models.PositiveIntegerField(
+        null=True, blank=True,
+        help_text='Methane content percentage e.g. 60 means 60 percent'
+    )
+    biogas_plant_capacity_kw = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True
+    )
+
+    # ========== COOKSTOVE NUMERIC INPUTS ==========
+    stoves_count = models.PositiveIntegerField(
+        null=True, blank=True,
+        help_text='Number of stoves distributed and verified'
+    )
+    wood_saved_kg_per_stove_year = models.PositiveIntegerField(
+        null=True, blank=True,
+        help_text='Wood saved per stove per year in kg'
+    )
+    fnrb_scaled = models.PositiveIntegerField(
+        null=True, blank=True,
+        help_text='Fraction of Non-Renewable Biomass scaled e.g. 85 means 85 percent'
+    )
+    wood_emission_factor_scaled = models.PositiveIntegerField(
+        null=True, blank=True,
+        help_text='Emission factor of wood scaled e.g. 150 means 1.5 kg CO2 per kg'
+    )
+    cookstove_efficiency_pct = models.PositiveIntegerField(
+        null=True, blank=True,
+        help_text='Stove usage rate percentage e.g. 90 means 90 percent'
+    )
+
+    # ========== WIND NUMERIC INPUTS ==========
+    wind_energy_generated_kwh = models.BigIntegerField(
+        null=True, blank=True,
+        help_text='Annual wind energy generated in kWh'
+    )
+    wind_grid_emission_factor = models.PositiveIntegerField(
+        null=True, blank=True,
+        help_text='Scaled grid emission factor same as solar'
+    )
+    wind_turbine_efficiency_pct = models.PositiveIntegerField(
+        null=True, blank=True,
+        help_text='Turbine efficiency percentage'
+    )
+    wind_turbine_count = models.PositiveIntegerField(null=True, blank=True)
+
+    # ========== COMPUTED OUTPUT FIELDS ==========
+    formula_computed_credits = models.PositiveIntegerField(
+        null=True, blank=True,
+        help_text='Credits computed by domain formula before ML cross-check'
+    )
+    ml_estimated_credits = models.PositiveIntegerField(
+        null=True, blank=True,
+        help_text='Credits estimated by ML image analysis for cross-check'
+    )
+    cross_check_gap_pct = models.DecimalField(
+        max_digits=8, decimal_places=2, null=True, blank=True,
+        help_text='Percentage gap between formula and ML estimate'
+    )
 
     # ========== CREDIT ISSUANCE ==========
     credits_issued = models.PositiveIntegerField(default=0)

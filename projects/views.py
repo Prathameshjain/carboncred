@@ -19,35 +19,68 @@ from credits.models import CreditWallet
 def calculate_credits_from_project(project):
     """
     Calculate the number of carbon credits to issue based on project verification data.
-    
-    Credit calculation logic:
-    - For VEGETATION: Based on estimated_co2_tco2_year (1 credit = 1 tCO2)
-    - For SOLAR: Based on avoided_co2_tco2_year (1 credit = 1 tCO2)
-    
-    Returns:
-        int: Number of credits to issue (0 if not verified)
+    Supports all 6 domain types with domain-specific formulas.
+    Returns 0 if the project is not VERIFIED.
     """
     if project.final_decision != 'VERIFIED':
         return 0
-    
-    classification = project.classification.upper()
-    
-    if classification in ['VEGETATION', 'PLANTATION']:
-        # Vegetation projects: credits based on carbon sequestration
-        co2_value = project.estimated_co2_tco2_year or 0
-        credits = int(co2_value)  # 1 credit per tCO2/year
-    elif classification == 'SOLAR':
-        # Solar projects: credits based on avoided CO2
-        co2_value = project.avoided_co2_tco2_year or project.estimated_co2_tco2_year or 0
-        credits = int(co2_value)  # 1 credit per tCO2/year
-    elif classification == 'METHANE':
-        # Methane projects: credits based on CO2 equivalent
-        co2_value = project.estimated_co2_tco2_year or 0
-        credits = int(co2_value)
+
+    cls = project.classification.upper()
+
+    if cls in ('VEGETATION', 'PLANTATION'):
+        if all([project.avg_dbh_mm, project.avg_height_cm,
+                project.tree_count, project.species_factor]):
+            credits = int(
+                (project.avg_dbh_mm * project.avg_height_cm *
+                 project.tree_count * project.species_factor * 50 * 367) / (10 ** 12)
+            )
+        else:
+            credits = int(project.estimated_co2_tco2_year or 0)
+
+    elif cls == 'SOLAR':
+        if all([project.energy_generated_kwh, project.grid_emission_factor,
+                project.solar_efficiency_pct]):
+            credits = int(
+                (project.energy_generated_kwh * project.grid_emission_factor *
+                 project.solar_efficiency_pct) / (10 ** 8)
+            )
+        else:
+            credits = int(project.estimated_co2_tco2_year or 0)
+
+    elif cls == 'METHANE':
+        if project.biogas_volume_m3_year and project.methane_fraction_pct:
+            ch4_vol = float(project.biogas_volume_m3_year) * (project.methane_fraction_pct / 100)
+            ch4_kg  = ch4_vol * 0.716
+            co2_kg  = ch4_kg * 25
+            credits = int(co2_kg / 1000)
+        else:
+            credits = int(project.estimated_co2_tco2_year or 0)
+
+    elif cls == 'COOKSTOVE':
+        if project.stoves_count:
+            n    = project.stoves_count
+            dw   = project.wood_saved_kg_per_stove_year or 2000
+            fnrb = project.fnrb_scaled or 85
+            ef   = project.wood_emission_factor_scaled or 150
+            eff  = project.cookstove_efficiency_pct or 90
+            credits = int((n * dw * fnrb * ef * eff) / (10 ** 9))
+        else:
+            credits = 0
+
+    elif cls == 'WIND':
+        if project.wind_energy_generated_kwh:
+            ef  = project.wind_grid_emission_factor or 715
+            eff = project.wind_turbine_efficiency_pct or 90
+            credits = int(
+                (project.wind_energy_generated_kwh * ef * eff) / (10 ** 8)
+            )
+        else:
+            credits = int(project.estimated_co2_tco2_year or 0)
+
     else:
         credits = 0
-    
-    return max(0, credits)  # Ensure non-negative
+
+    return max(0, credits)
 
 
 def issue_credits_to_wallet(user, project, credits_amount):
@@ -196,6 +229,18 @@ class ProjectViewSet(viewsets.ModelViewSet):
         after_image = validated_data.pop('after_image', None)
         before_image_date = validated_data.pop('before_image_date', None)
         after_image_date = validated_data.pop('after_image_date', None)
+
+        # Extract all numeric domain fields (pop them out so they don't go into model create)
+        numeric_field_names = [
+            'tree_count', 'avg_dbh_mm', 'avg_height_cm', 'species_factor',
+            'energy_generated_kwh', 'grid_emission_factor', 'solar_efficiency_pct',
+            'biogas_volume_m3_year', 'methane_fraction_pct', 'biogas_plant_capacity_kw',
+            'stoves_count', 'wood_saved_kg_per_stove_year', 'fnrb_scaled',
+            'wood_emission_factor_scaled', 'cookstove_efficiency_pct',
+            'wind_energy_generated_kwh', 'wind_grid_emission_factor',
+            'wind_turbine_efficiency_pct', 'wind_turbine_count',
+        ]
+        numeric_data = {f: validated_data.pop(f, None) for f in numeric_field_names}
         
         # Collect image files for verification
         image_files = []
@@ -220,9 +265,11 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 project_area_hectares=float(validated_data['project_area_hectares']),
                 project_cost_lakh_inr=float(validated_data['project_cost_lakh_inr']),
                 claimed_improvement_pct=float(validated_data['claimed_improvement_pct']),
-                project_latitude=float(validated_data.get('project_latitude')) if validated_data.get('project_latitude') else None,
-                project_longitude=float(validated_data.get('project_longitude')) if validated_data.get('project_longitude') else None,
+                project_latitude=float(validated_data['project_latitude']) if validated_data.get('project_latitude') else None,
+                project_longitude=float(validated_data['project_longitude']) if validated_data.get('project_longitude') else None,
                 image_files=image_files,
+                has_images=bool(image_files),
+                **numeric_data
             )
             
             # Map verification result to model fields

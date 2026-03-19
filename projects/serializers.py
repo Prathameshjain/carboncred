@@ -55,11 +55,23 @@ class ProjectCreateSerializer(serializers.ModelSerializer):
             'after_image',
             'before_image_date',
             'after_image_date',
+            # Plantation numeric inputs
+            'tree_count', 'avg_dbh_mm', 'avg_height_cm', 'species_factor',
+            # Solar numeric inputs
+            'energy_generated_kwh', 'grid_emission_factor', 'solar_efficiency_pct',
+            # Methane numeric inputs
+            'biogas_volume_m3_year', 'methane_fraction_pct', 'biogas_plant_capacity_kw',
+            # Cookstove numeric inputs
+            'stoves_count', 'wood_saved_kg_per_stove_year', 'fnrb_scaled',
+            'wood_emission_factor_scaled', 'cookstove_efficiency_pct',
+            # Wind numeric inputs
+            'wind_energy_generated_kwh', 'wind_grid_emission_factor',
+            'wind_turbine_efficiency_pct', 'wind_turbine_count',
         ]
     
     def validate_classification(self, value):
         """Ensure classification is valid."""
-        valid_choices = ['SOLAR', 'VEGETATION', 'PLANTATION', 'METHANE']
+        valid_choices = ['SOLAR', 'VEGETATION', 'PLANTATION', 'METHANE', 'COOKSTOVE', 'WIND']
         if value.upper() not in valid_choices:
             raise serializers.ValidationError(
                 f"Invalid classification. Must be one of: {', '.join(valid_choices)}"
@@ -81,15 +93,35 @@ class ProjectCreateSerializer(serializers.ModelSerializer):
         return value
     
     def validate(self, data):
-        """Validate that at least one image is provided."""
-        before_image = data.get('before_image')
-        after_image = data.get('after_image')
-        
-        if not before_image and not after_image:
-            raise serializers.ValidationError({
-                'before_image': 'At least one image (before or after) is required for verification.'
-            })
-        
+        """Domain-aware validation for images and required numeric fields."""
+        IMAGE_REQUIRED   = {'SOLAR', 'VEGETATION', 'PLANTATION'}
+        PHOTO_REQUIRED   = {'COOKSTOVE'}
+        NUMERIC_REQUIRED = {
+            'METHANE':  'biogas_volume_m3_year',
+            'WIND':     'wind_energy_generated_kwh',
+        }
+
+        classification = data.get('classification', '').upper()
+        before_image   = data.get('before_image')
+        after_image    = data.get('after_image')
+
+        if classification in IMAGE_REQUIRED:
+            if not before_image and not after_image:
+                raise serializers.ValidationError({
+                    'before_image': 'At least one image is required for this domain.'
+                })
+        elif classification in PHOTO_REQUIRED:
+            if not before_image and not after_image:
+                raise serializers.ValidationError({
+                    'before_image': 'Geotagged photos are mandatory for cookstove verification.'
+                })
+        elif classification in NUMERIC_REQUIRED:
+            required_field = NUMERIC_REQUIRED[classification]
+            if not data.get(required_field):
+                raise serializers.ValidationError({
+                    required_field: f'This field is required for {classification} projects.'
+                })
+
         return data
 
 
@@ -153,6 +185,18 @@ class ProjectDetailSerializer(serializers.ModelSerializer):
             'estimated_energy_mwh_year',
             'avoided_co2_tco2_year',
             'land_use_conflict',
+
+            # Domain numeric inputs
+            'tree_count', 'avg_dbh_mm', 'avg_height_cm', 'species_factor',
+            'energy_generated_kwh', 'grid_emission_factor', 'solar_efficiency_pct',
+            'biogas_volume_m3_year', 'methane_fraction_pct', 'biogas_plant_capacity_kw',
+            'stoves_count', 'wood_saved_kg_per_stove_year', 'fnrb_scaled',
+            'wood_emission_factor_scaled', 'cookstove_efficiency_pct',
+            'wind_energy_generated_kwh', 'wind_grid_emission_factor',
+            'wind_turbine_efficiency_pct', 'wind_turbine_count',
+
+            # Computed output fields
+            'formula_computed_credits', 'ml_estimated_credits', 'cross_check_gap_pct',
             
             # Credits
             'credits_issued',
@@ -180,18 +224,23 @@ class ProjectDetailSerializer(serializers.ModelSerializer):
             'vegetation_growth_pct', 'ndvi_change', 'soil_health_index',
             'aqi_improvement_proxy', 'claim_gap_pct', 'solar_probability',
             'estimated_panel_area_m2', 'estimated_energy_mwh_year',
-            'avoided_co2_tco2_year', 'land_use_conflict', 'credits_issued',
-            'blockchain_minted', 'blockchain_tx_hash',
+            'avoided_co2_tco2_year', 'land_use_conflict',
+            'formula_computed_credits', 'ml_estimated_credits', 'cross_check_gap_pct',
+            'credits_issued', 'blockchain_minted', 'blockchain_tx_hash',
             'verification_result_json', 'created_at', 'updated_at', 'images'
         ]
     
     def get_project_type(self, obj):
         """Return ML project type based on classification."""
-        if obj.classification in ['SOLAR']:
-            return 'solar'
-        elif obj.classification in ['VEGETATION', 'PLANTATION']:
-            return 'vegetation'
-        return 'unknown'
+        mapping = {
+            'SOLAR':      'solar',
+            'VEGETATION': 'vegetation',
+            'PLANTATION': 'vegetation',
+            'METHANE':    'methane',
+            'COOKSTOVE':  'cookstove',
+            'WIND':       'wind',
+        }
+        return mapping.get(obj.classification, 'unknown')
 
 
 class ProjectListSerializer(serializers.ModelSerializer):
@@ -225,6 +274,16 @@ class ProjectListSerializer(serializers.ModelSerializer):
             # Blockchain fields for displaying blockchain record in verification reports
             'blockchain_minted',
             'blockchain_tx_hash',
+            # Domain numeric inputs
+            'tree_count', 'avg_dbh_mm', 'avg_height_cm', 'species_factor',
+            'energy_generated_kwh', 'grid_emission_factor', 'solar_efficiency_pct',
+            'biogas_volume_m3_year', 'methane_fraction_pct', 'biogas_plant_capacity_kw',
+            'stoves_count', 'wood_saved_kg_per_stove_year', 'fnrb_scaled',
+            'wood_emission_factor_scaled', 'cookstove_efficiency_pct',
+            'wind_energy_generated_kwh', 'wind_grid_emission_factor',
+            'wind_turbine_efficiency_pct', 'wind_turbine_count',
+            # Computed output fields
+            'formula_computed_credits', 'ml_estimated_credits', 'cross_check_gap_pct',
         ]
 
 

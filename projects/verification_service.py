@@ -87,19 +87,16 @@ class ProjectVerificationService:
     def _get_project_type_for_ml(self, classification: str) -> str:
         """
         Map Django classification to ML verification project type.
-        
-        Django classifications: SOLAR, VEGETATION, PLANTATION, METHANE
-        ML types: solar, vegetation
         """
-        classification_upper = classification.upper()
-        
-        if classification_upper == 'SOLAR':
-            return 'solar'
-        elif classification_upper in ['VEGETATION', 'PLANTATION']:
-            return 'vegetation'
-        else:
-            # Default to vegetation for unknown types
-            return 'vegetation'
+        mapping = {
+            'SOLAR':      'solar',
+            'VEGETATION': 'vegetation',
+            'PLANTATION': 'vegetation',
+            'METHANE':    'methane',
+            'COOKSTOVE':  'cookstove',
+            'WIND':       'wind',
+        }
+        return mapping.get(classification.upper(), 'vegetation')
     
     def _generate_mock_ai_outputs(self, project_type: str) -> Dict[str, Any]:
         """
@@ -144,11 +141,15 @@ class ProjectVerificationService:
         
         Args:
             image_files: List of image data dicts with 'file', 'type', 'date'
-            project_type: 'vegetation' or 'solar'
+            project_type: ML project type string
         
         Returns:
             AI outputs from model inference
         """
+        # Numeric-only domains do not use image ML
+        NUMERIC_ONLY_DOMAINS = {'methane', 'cookstove', 'wind'}
+        if project_type in NUMERIC_ONLY_DOMAINS:
+            return {}
         import numpy as np
         from PIL import Image
         import io
@@ -346,7 +347,32 @@ class ProjectVerificationService:
         project_latitude: Optional[float] = None,
         project_longitude: Optional[float] = None,
         image_files: Optional[List[Dict[str, Any]]] = None,
-        ai_outputs: Optional[Dict[str, Any]] = None
+        ai_outputs: Optional[Dict[str, Any]] = None,
+        # Plantation numeric inputs
+        tree_count=None,
+        avg_dbh_mm=None,
+        avg_height_cm=None,
+        species_factor=None,
+        # Solar numeric inputs
+        energy_generated_kwh=None,
+        grid_emission_factor=None,
+        solar_efficiency_pct=None,
+        # Methane numeric inputs
+        biogas_volume_m3_year=None,
+        methane_fraction_pct=None,
+        biogas_plant_capacity_kw=None,
+        # Cookstove numeric inputs
+        stoves_count=None,
+        wood_saved_kg_per_stove_year=None,
+        fnrb_scaled=None,
+        wood_emission_factor_scaled=None,
+        cookstove_efficiency_pct=None,
+        # Wind numeric inputs
+        wind_energy_generated_kwh=None,
+        wind_grid_emission_factor=None,
+        wind_turbine_efficiency_pct=None,
+        wind_turbine_count=None,
+        has_images: bool = False,
     ) -> Dict[str, Any]:
         """
         Run ML verification on project data with images.
@@ -383,6 +409,28 @@ class ProjectVerificationService:
                 "lat": float(project_latitude),
                 "lon": float(project_longitude)
             }
+
+        # Add all numeric domain fields
+        user_metadata['tree_count']                  = tree_count
+        user_metadata['avg_dbh_mm']                  = avg_dbh_mm
+        user_metadata['avg_height_cm']               = avg_height_cm
+        user_metadata['species_factor']              = species_factor
+        user_metadata['energy_generated_kwh']        = energy_generated_kwh
+        user_metadata['grid_emission_factor']        = grid_emission_factor
+        user_metadata['solar_efficiency_pct']        = solar_efficiency_pct
+        user_metadata['biogas_volume_m3_year']       = biogas_volume_m3_year
+        user_metadata['methane_fraction_pct']        = methane_fraction_pct
+        user_metadata['biogas_plant_capacity_kw']    = biogas_plant_capacity_kw
+        user_metadata['stoves_count']                = stoves_count
+        user_metadata['wood_saved_kg_per_stove_year']= wood_saved_kg_per_stove_year
+        user_metadata['fnrb_scaled']                 = fnrb_scaled
+        user_metadata['wood_emission_factor_scaled'] = wood_emission_factor_scaled
+        user_metadata['cookstove_efficiency_pct']    = cookstove_efficiency_pct
+        user_metadata['wind_energy_generated_kwh']   = wind_energy_generated_kwh
+        user_metadata['wind_grid_emission_factor']   = wind_grid_emission_factor
+        user_metadata['wind_turbine_efficiency_pct'] = wind_turbine_efficiency_pct
+        user_metadata['wind_turbine_count']          = wind_turbine_count
+        user_metadata['has_images']                  = has_images
         
         # Get AI outputs from images or use provided/mock
         if ai_outputs is None:
@@ -563,6 +611,9 @@ class ProjectVerificationService:
                 "soil_health_index": Decimal(str(key_metrics.get("soil_health_index", 0))) if key_metrics.get("soil_health_index") else None,
                 "aqi_improvement_proxy": Decimal(str(key_metrics.get("aqi_improvement_proxy", 0))) if key_metrics.get("aqi_improvement_proxy") else None,
                 "estimated_co2_tco2_year": Decimal(str(key_metrics.get("estimated_carbon_sequestration_tco2_year", 0))) if key_metrics.get("estimated_carbon_sequestration_tco2_year") else None,
+                "formula_computed_credits": key_metrics.get("formula_computed_credits"),
+                "ml_estimated_credits": key_metrics.get("ml_estimated_credits"),
+                "cross_check_gap_pct": Decimal(str(key_metrics.get("cross_check_gap_pct", 0) or 0)) if key_metrics.get("cross_check_gap_pct") is not None else None,
             })
         
         # Solar-specific fields
@@ -574,8 +625,37 @@ class ProjectVerificationService:
                 "avoided_co2_tco2_year": Decimal(str(key_metrics.get("avoided_co2_tco2_year", 0))) if key_metrics.get("avoided_co2_tco2_year") else None,
                 "land_use_conflict": key_metrics.get("land_use_conflict", False),
                 "estimated_co2_tco2_year": Decimal(str(key_metrics.get("avoided_co2_tco2_year", 0))) if key_metrics.get("avoided_co2_tco2_year") else None,
+                "formula_computed_credits": key_metrics.get("formula_computed_credits"),
+                "ml_estimated_credits": key_metrics.get("ml_estimated_credits"),
+                "cross_check_gap_pct": Decimal(str(key_metrics.get("cross_check_gap_pct", 0) or 0)) if key_metrics.get("cross_check_gap_pct") is not None else None,
             })
-        
+
+        # Methane-specific fields
+        elif project_type == "methane":
+            model_data.update({
+                "estimated_co2_tco2_year": Decimal(str(key_metrics.get("co2_equivalent_tonnes", 0) or 0)),
+                "formula_computed_credits": key_metrics.get("formula_computed_credits"),
+                "cross_check_gap_pct": Decimal(str(key_metrics.get("claim_gap_pct", 0) or 0)),
+            })
+
+        # Cookstove-specific fields
+        elif project_type == "cookstove":
+            model_data.update({
+                "formula_computed_credits": key_metrics.get("formula_computed_credits"),
+                "cross_check_gap_pct": Decimal(str(key_metrics.get("claim_gap_pct", 0) or 0)),
+            })
+
+        # Wind-specific fields
+        elif project_type == "wind":
+            wind_kwh = key_metrics.get("wind_energy_generated_kwh", 0) or 0
+            ef       = key_metrics.get("grid_emission_factor", 715) or 715
+            eff      = key_metrics.get("efficiency_pct", 90) or 90
+            model_data.update({
+                "estimated_co2_tco2_year": Decimal(str(wind_kwh * ef * eff / (10 ** 8))),
+                "formula_computed_credits": key_metrics.get("formula_computed_credits"),
+                "cross_check_gap_pct": Decimal(str(key_metrics.get("claim_gap_pct", 0) or 0)),
+            })
+
         return model_data
 
 
