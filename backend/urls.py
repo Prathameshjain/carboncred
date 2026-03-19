@@ -41,3 +41,9 @@ if settings.DEBUG:
         path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
         path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
     ]
+
+# Always serve media and static files (Gunicorn does not serve static files natively)
+# Nginx can take over for high traffic, but this ensures it works in Docker
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+if hasattr(settings, 'STATIC_ROOT') and settings.STATIC_ROOT:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

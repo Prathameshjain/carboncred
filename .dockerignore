@@ -1,0 +1,64 @@
+# =========================================
+# CarbonCred — .dockerignore
+# =========================================
+# Files excluded from Docker build context to keep images lean
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+*.spec
+
+# Virtual environments (use requirements.txt instead)
+.venv/
+venv/
+env/
+.env/
+
+# Django
+*.log
+local_settings.py
+staticfiles/
+db.sqlite3
+
+# Media (uploaded files — use volume instead)
+# media/    ← DO NOT ignore media; we copy it for initial seed if needed
+
+# Node / Frontend
+frontend/node_modules/
+frontend/.cache/
+frontend/dist/
+
+# ML venv (use requirements.txt instead)
+ml-verification/venv/
+ml-verification/__pycache__/
+ml-verification/src/__pycache__/
+ml-verification/src/reports/
+ml-verification/synthetic_data/
+
+# Git
+.git/
+.gitignore
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Docker files themselves (avoid recursive issues)
+# docker-compose.yml  ← keep this
+
+# Environment files (use --env-file or docker secrets instead)
+# .env is intentionally NOT excluded so the backend container can read it
+# If you want to exclude it, add it here and pass secrets via compose env vars

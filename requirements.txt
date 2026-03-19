@@ -24,8 +24,11 @@ psycopg2-binary>=2.9.9
 # API Documentation (Swagger/ReDoc)
 drf-yasg>=1.21.7
 
-# Image Processing (for project images)
+# Image Processing (for project images + ML verification image processing)
 Pillow>=10.0.0
+
+# Numerical processing (used by verification_service.py for image analysis)
+numpy>=1.24.0,<2.0.0
 
 # Blockchain Integration
 web3>=6.0.0

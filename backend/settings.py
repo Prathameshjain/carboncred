@@ -12,16 +12,23 @@ environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-b7#%e$l%wcino*ljtmeht1&y!oy7p8ox&%iexx!8w48onfz)ba')
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = [
-    "127.0.0.1",
-    "localhost",
-]
+# In Docker (DEBUG=False), allow any host so it works behind a reverse proxy.
+# In development (DEBUG=True), restrict to localhost only.
+if DEBUG:
+    ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
+else:
+    ALLOWED_HOSTS = ["*"]
 
-# CORS
+# CORS — allow local dev server AND the containerised Nginx frontend
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
-    "http://127.0.0.1:5173"
+    "http://127.0.0.1:5173",
+    "http://localhost",
+    "http://localhost:80",
+    "http://127.0.0.1",
+    "http://127.0.0.1:80",
 ]
+CORS_ALLOW_ALL_ORIGINS = not DEBUG  # allow all origins in production container
 
 # Applications
 INSTALLED_APPS = [
@@ -107,10 +114,14 @@ USE_TZ = True
 
 # Static files
 STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'  # collectstatic target (required for Gunicorn)
 
 # Media files (PROJECT IMAGES)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# ML Verification Service URL (used by backend to call the ml-service container)
+ML_SERVICE_URL = os.environ.get('ML_SERVICE_URL', 'http://localhost:5001')
 
 # Default PK
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
