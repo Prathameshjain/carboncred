@@ -34,8 +34,42 @@ class RegisterSerializer(serializers.ModelSerializer):
         extra_kwargs = {'password': {'write_only': True}}
 
     def validate(self, data):
+        import re
+        from datetime import datetime
+
+        # Password match
         if data['password'] != data['password2']:
-            raise serializers.ValidationError("Passwords do not match.")
+            raise serializers.ValidationError({"password2": "Passwords do not match."})
+
+        # Username — 3–30 chars, alphanumeric + underscore
+        username = data.get('username', '')
+        if len(username) < 3 or len(username) > 30:
+            raise serializers.ValidationError({"username": "Username must be 3–30 characters."})
+        if not re.match(r'^[a-zA-Z0-9_]+$', username):
+            raise serializers.ValidationError({"username": "Username can only contain letters, numbers, and underscores."})
+
+        # Phone — Indian mobile (starts 6-9, 10 digits)
+        phone = data.get('phone', '')
+        if not re.match(r'^[6-9]\d{9}$', phone):
+            raise serializers.ValidationError({"phone": "Enter a valid 10-digit Indian mobile number."})
+
+        # PAN — 5 letters, 4 digits, 1 letter
+        pan = data.get('pan_id', '').upper()
+        if not re.match(r'^[A-Z]{5}[0-9]{4}[A-Z]{1}$', pan):
+            raise serializers.ValidationError({"pan_id": "PAN must be in format ABCDE1234F."})
+        data['pan_id'] = pan  # normalize to uppercase
+
+        # MetaMask wallet
+        wallet = data.get('metamask_wallet_address', '')
+        if not re.match(r'^0x[a-fA-F0-9]{40}$', wallet):
+            raise serializers.ValidationError({"metamask_wallet_address": "Enter a valid Ethereum wallet address (0x + 40 hex chars)."})
+
+        # Registration year
+        current_year = datetime.now().year
+        year = data.get('registration_year', 0)
+        if not year or year < 1800 or year > current_year:
+            raise serializers.ValidationError({"registration_year": f"Registration year must be between 1800 and {current_year}."})
+
         return data
 
     def create(self, validated_data):

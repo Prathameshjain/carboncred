@@ -67,8 +67,6 @@ const PurchaseHistory = () => {
         "http://127.0.0.1:8000/api/transactions/my/",
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      console.log("Transactions fetched:", response.data);
-      console.log("Current user ID:", currentUserId);
       setTransactions(response.data);
     } catch (error) {
       console.error("Error fetching transactions:", error);
@@ -135,12 +133,12 @@ const PurchaseHistory = () => {
         )}
 
         <div
-          className={`pt-24 transition-all duration-300 ${sidebarOpen ? "ml-64" : "ml-0"
+          className={`pt-20 transition-all duration-300 ${sidebarOpen ? "ml-64" : "ml-0"
             }`}
         >
           <main className="px-6 py-4 max-w-7xl mx-auto space-y-8">
             {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
               <Card className="bg-slate-900 border-slate-800">
                 <CardContent className="pt-6 flex justify-between items-center">
                   <div>

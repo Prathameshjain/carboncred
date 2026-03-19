@@ -20,10 +20,8 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
   };
 
   return (
-    <>
-    <div className="absolute"></div>
-      <nav className="fixed top-0 left-0 right-0 z-40 backdrop-blur-xl bg-white/70 border-b border-white/20">
-        <div className="flex items-center justify-between px-6 py-4">
+    <nav className="fixed top-0 left-0 right-0 z-40 backdrop-blur-xl bg-white/70 border-b border-white/20">
+        <div className="flex items-center justify-between px-6 py-3">
           <div className="flex items-center gap-4">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -46,7 +44,6 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
           <div className="flex items-center gap-3">
             <button className="relative p-3 hover:bg-white/40 rounded-xl transition-colors">
               <Bell size={20} className="text-slate-600" />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
             </button>
 
             <div className="relative">
@@ -83,7 +80,6 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
           </div>
         </div>
       </nav>
-    // </>
     );
 };
 

@@ -382,7 +382,7 @@ function Mycredits() {
       <Navbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
       {/* MAIN LAYOUT */}
-      <div className="flex pt-24 relative">
+      <div className="flex pt-20 relative">
         <aside
           className={`transition-all duration-300 ${sidebarOpen ? "w-64" : "w-0"
             }`}
@@ -395,7 +395,7 @@ function Mycredits() {
 
         <div className="flex-1 flex flex-col">
           <div className="flex-1 px-6 max-w-7xl mx-auto space-y-8 pb-4">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8 mt-[25px]">
               <Card className="bg-gradient-card border-border/50 shadow-md bg-slate-900 border-slate-800">
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between">

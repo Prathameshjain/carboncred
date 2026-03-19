@@ -321,9 +321,9 @@ const AddProject = () => {
       {/* Header */}
       <Navbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
-      <div className="flex relative pt-24">
+      <div className="flex relative pt-20">
         <aside
-          className={`pt-24 transition-all duration-300 ${sidebarOpen ? "ml-64" : "ml-0"
+          className={`transition-all duration-300 ${sidebarOpen ? "ml-64" : "ml-0"
             }`}
         >
           {/* Sidebar */}
@@ -433,6 +433,7 @@ const AddProject = () => {
                       name="project_area_hectares"
                       value={formData.project_area_hectares}
                       onChange={handleChange}
+                      onKeyDown={(e) => { if (['-', '+', 'e', 'E'].includes(e.key)) e.preventDefault(); }}
                       step="0.01"
                       min="0"
                       className={`w-full px-4 py-2.5 border ${errors.project_area_hectares
@@ -458,6 +459,7 @@ const AddProject = () => {
                       name="project_cost_lakh_inr"
                       value={formData.project_cost_lakh_inr}
                       onChange={handleChange}
+                      onKeyDown={(e) => { if (['-', '+', 'e', 'E'].includes(e.key)) e.preventDefault(); }}
                       step="0.01"
                       min="0"
                       className={`w-full px-4 py-2.5 border ${errors.project_cost_lakh_inr
@@ -483,6 +485,7 @@ const AddProject = () => {
                       name="claimed_improvement_pct"
                       value={formData.claimed_improvement_pct}
                       onChange={handleChange}
+                      onKeyDown={(e) => { if (['-', '+', 'e', 'E'].includes(e.key)) e.preventDefault(); }}
                       step="0.01"
                       min="0"
                       max="100"
@@ -498,7 +501,7 @@ const AddProject = () => {
                       </p>
                     )}
                     <p className="text-xs text-slate-500 mt-1">
-                      Your claimed vegetation/solar/energy improvement percentage
+                      Your claimed improvement percentage
                     </p>
                   </div>
                 </div>
@@ -514,7 +517,7 @@ const AddProject = () => {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z" />
                         </svg>
                       </div>
-                      <div>
+                      <div className="text-left">
                         <h2 className="text-lg font-semibold text-slate-800">
                           {DOMAIN_CONFIG[formData.classification].numericSection.title}
                         </h2>
@@ -535,6 +538,12 @@ const AddProject = () => {
                             name={field.name}
                             value={formData[field.name]}
                             onChange={handleChange}
+                            onKeyDown={(e) => {
+                              if (field.type === 'number' && (e.key === '-' || e.key === '+' || e.key === 'e' || e.key === 'E')) {
+                                e.preventDefault();
+                              }
+                            }}
+                            min={field.type === 'number' ? '0' : undefined}
                             placeholder={field.placeholder}
                             className={`w-full px-4 py-2.5 border ${errors[field.name] ? "border-red-500" : "border-slate-300"} rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition`}
                           />
@@ -624,25 +633,32 @@ const AddProject = () => {
                   <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
                     <Upload className="w-5 h-5 text-amber-600" />
                   </div>
-                  <div>
+                  <div className="text-left">
                     <h2 className="text-lg font-semibold text-slate-800">
-                      Project Images
                       {formData.classification && DOMAIN_CONFIG[formData.classification] &&
                         !DOMAIN_CONFIG[formData.classification].requiresImages &&
+                        !DOMAIN_CONFIG[formData.classification].requiresPhotos
+                        ? "Project Documents"
+                        : "Project Images"
+                      }
+                      {formData.classification &&
+                        DOMAIN_CONFIG[formData.classification] &&
+                        !DOMAIN_CONFIG[formData.classification].requiresImages &&
                         !DOMAIN_CONFIG[formData.classification].requiresPhotos && (
-                          <span className="ml-2 text-sm font-normal text-slate-400">
-                            (optional for this domain)
-                          </span>
+                          <span className="ml-2 text-sm font-normal text-slate-400">(optional)</span>
                         )}
                       {formData.classification &&
                         DOMAIN_CONFIG[formData.classification]?.requiresPhotos && (
-                          <span className="ml-2 text-sm font-normal text-red-500">
-                            — geotagged photos required
-                          </span>
+                          <span className="ml-2 text-sm font-normal text-red-500">— geotagged photos required</span>
                         )}
                     </h2>
                     <p className="text-xs text-slate-500">
-                      Upload before and after satellite/drone images for ML verification
+                      {formData.classification && DOMAIN_CONFIG[formData.classification] &&
+                        !DOMAIN_CONFIG[formData.classification].requiresImages &&
+                        !DOMAIN_CONFIG[formData.classification].requiresPhotos
+                        ? "Upload supporting documents or site photos (optional)"
+                        : "Upload before and after satellite/drone images for ML verification"
+                      }
                     </p>
                   </div>
                 </div>
@@ -687,12 +703,22 @@ const AddProject = () => {
                             htmlFor="beforeImage"
                             className="text-emerald-600 font-medium cursor-pointer hover:underline text-sm"
                           >
-                            Click to upload image
+                            {formData.classification && DOMAIN_CONFIG[formData.classification] &&
+                              !DOMAIN_CONFIG[formData.classification].requiresImages &&
+                              !DOMAIN_CONFIG[formData.classification].requiresPhotos
+                              ? "Click to upload document"
+                              : "Click to upload image"
+                            }
                           </label>
                           <input
                             id="beforeImage"
                             type="file"
-                            accept="image/*"
+                            accept={formData.classification && DOMAIN_CONFIG[formData.classification] &&
+                              !DOMAIN_CONFIG[formData.classification].requiresImages &&
+                              !DOMAIN_CONFIG[formData.classification].requiresPhotos
+                              ? "*/*"
+                              : "image/*"
+                            }
                             onChange={(e) => handleImageUpload(e, "before_image")}
                             className="hidden"
                           />
@@ -775,11 +801,6 @@ const AddProject = () => {
                   </div>
                 </div>
 
-                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <p className="text-xs text-blue-700">
-                    📷 Upload satellite or drone imagery of your project area. The ML system will analyze vegetation coverage, solar panels, or other project features to verify your carbon credit claim.
-                  </p>
-                </div>
               </div>
 
               {/* ========== VERIFICATION RESULT ========== */}

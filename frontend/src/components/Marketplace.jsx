@@ -203,7 +203,7 @@ const Marketplace = () => {
         )}
 
         <div
-          className={`pt-24 transition-all duration-300 ${sidebarOpen ? "ml-64" : "ml-0"
+          className={`pt-20 transition-all duration-300 ${sidebarOpen ? "ml-64" : "ml-0"
             }`}
         >
           <main className="px-6 py-4 max-w-7xl mx-auto space-y-8">

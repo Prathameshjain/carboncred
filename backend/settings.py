@@ -9,8 +9,8 @@ env = environ.Env()
 environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
 # SECURITY
-SECRET_KEY = 'django-insecure-b7#%e$l%wcino*ljtmeht1&y!oy7p8ox&%iexx!8w48onfz)ba'
-DEBUG = True
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-b7#%e$l%wcino*ljtmeht1&y!oy7p8ox&%iexx!8w48onfz)ba')
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = [
     "127.0.0.1",
@@ -119,10 +119,15 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.BasicAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
+    # Throttle rates available for per-view use via throttle_classes
+    # Not applied globally to avoid locking out developers during testing
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/hour',
+        'user': '1000/hour',
+        'login': '10/min',
+    },
 }

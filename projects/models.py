@@ -269,6 +269,7 @@ class Project(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+        unique_together = [('user', 'project_name')]
 
     def __str__(self):
         return f"{self.project_name} ({self.report_id or 'Pending'})"

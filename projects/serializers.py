@@ -79,9 +79,19 @@ class ProjectCreateSerializer(serializers.ModelSerializer):
         return value.upper()
     
     def validate_project_area_hectares(self, value):
-        """Ensure area is positive."""
-        if value <= 0:
-            raise serializers.ValidationError("Project area must be greater than 0.")
+        """Ensure area is positive and below a sane upper bound."""
+        if value <= 0 or value > 10_000_000:
+            raise serializers.ValidationError("Project area must be between 0 and 10,000,000 hectares.")
+        return value
+
+    def validate_project_latitude(self, value):
+        if value is not None and (value < 6.0 or value > 38.0):
+            raise serializers.ValidationError("Latitude must be between 6.0 and 38.0 for India.")
+        return value
+
+    def validate_project_longitude(self, value):
+        if value is not None and (value < 68.0 or value > 98.0):
+            raise serializers.ValidationError("Longitude must be between 68.0 and 98.0 for India.")
         return value
     
     def validate_claimed_improvement_pct(self, value):

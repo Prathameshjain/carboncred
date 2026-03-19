@@ -62,6 +62,7 @@ const Dashboard = () => {
   const [recentTransactions, setRecentTransactions] = useState([]);
   const [userId, setUserId] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [companyName, setCompanyName] = useState("");
 
   // Fetch dashboard data
   useEffect(() => {
@@ -100,7 +101,17 @@ const Dashboard = () => {
           "http://127.0.0.1:8000/api/transactions/my/",
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        setRecentTransactions(transactionResponse.data.slice(0, 5)); // Get last 5
+        setRecentTransactions(transactionResponse.data.slice(0, 5));
+
+        // Fetch profile for company name
+        try {
+          const profileRes = await axios.get(
+            "http://127.0.0.1:8000/api/accounts/profile/",
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          setCompanyName(profileRes.data?.name || "");
+        } catch (_) {}
+
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
         if (error.response?.status === 401) {
@@ -153,23 +164,21 @@ const Dashboard = () => {
       {/* Top Navigation */}
       <Navbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
-      <div className="flex pt-24 relative">
 
-      </div>
       {/* Sidebar */}
       <Sidebar sidebarOpen={sidebarOpen} />
 
       {/* Main Content */}
       <div
-        className={`transition-all duration-300 ${
+        className={`pt-20 transition-all duration-300 ${
           sidebarOpen ? "ml-64" : "ml-0"
         }`}
       >
         <div className="px-6 max-w-7xl mx-auto space-y-8 pb-4">
           {/* Header */}
-          <div className="space-y-2">
+          <div className="space-y-2 mt-5">
             <h1 className="text-4xl font-bold text-slate-900">
-              Welcome back! 🌍
+              Welcome Back{companyName ? `, ${companyName}` : "!"} 🌍
             </h1>
             <p className="text-slate-600">
               Here's your weekly eco-impact summary
@@ -269,7 +278,7 @@ const Dashboard = () => {
                       <div className="w-10 h-10 rounded-lg bg-emerald-500 flex items-center justify-center">
                         <Award size={20} className="text-white" />
                       </div>
-                      <div>
+                      <div className="text-left">
                         <p className="text-sm text-slate-600">Total Available</p>
                         <p className="text-xl font-bold text-slate-900">{creditSummary.total_available}</p>
                       </div>
@@ -280,7 +289,7 @@ const Dashboard = () => {
                       <div className="w-10 h-10 rounded-lg bg-teal-500 flex items-center justify-center">
                         <Zap size={20} className="text-white" />
                       </div>
-                      <div>
+                      <div className="text-left">
                         <p className="text-sm text-slate-600">Issued</p>
                         <p className="text-xl font-bold text-slate-900">{creditSummary.issued_available}</p>
                       </div>
@@ -291,7 +300,7 @@ const Dashboard = () => {
                       <div className="w-10 h-10 rounded-lg bg-cyan-500 flex items-center justify-center">
                         <ShoppingCart size={20} className="text-white" />
                       </div>
-                      <div>
+                      <div className="text-left">
                         <p className="text-sm text-slate-600">Purchased</p>
                         <p className="text-xl font-bold text-slate-900">{creditSummary.purchased_available}</p>
                       </div>
@@ -302,7 +311,7 @@ const Dashboard = () => {
                       <div className="w-10 h-10 rounded-lg bg-slate-500 flex items-center justify-center">
                         <Target size={20} className="text-white" />
                       </div>
-                      <div>
+                      <div className="text-left">
                         <p className="text-sm text-slate-600">Used/Retired</p>
                         <p className="text-xl font-bold text-slate-900">{creditSummary.total_used}</p>
                       </div>

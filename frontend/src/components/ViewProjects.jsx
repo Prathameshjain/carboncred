@@ -119,7 +119,7 @@ const ViewProjects = () => {
       <Sidebar sidebarOpen={sidebarOpen} />
 
       <div
-        className={`transition-all duration-300 pt-24 ${
+        className={`transition-all duration-300 pt-20 ${
           sidebarOpen ? "ml-64" : "ml-0"
         }`}
       >

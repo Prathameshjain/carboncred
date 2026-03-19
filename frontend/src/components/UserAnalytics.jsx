@@ -25,10 +25,10 @@ const STATUS_COLORS = {
 
 const DOMAIN_COLORS = {
   PLANTATION: "#16a34a",
-  SOLAR:      "#eab308",
-  METHANE:    "#8b5cf6",
-  COOKSTOVE:  "#f97316",
-  WIND:       "#06b6d4",
+  SOLAR: "#eab308",
+  METHANE: "#8b5cf6",
+  COOKSTOVE: "#f97316",
+  WIND: "#06b6d4",
 };
 
 // Shared card class — flex-col so inner content can stretch
@@ -209,7 +209,7 @@ function CreditsPerProjectChart() {
                 <BarChart data={chartData} layout="vertical"
                   margin={{ top: 4, right: 50, left: 8, bottom: 4 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" horizontal={false} />
-                  <XAxis type="number" tick={axisStyle} tickFormatter={v => v >= 1000 ? `${(v/1000).toFixed(1)}k` : v} />
+                  <XAxis type="number" tick={axisStyle} tickFormatter={v => v >= 1000 ? `${(v / 1000).toFixed(1)}k` : v} />
                   <YAxis dataKey="name" type="category" width={130} tick={{ ...axisStyle, textAnchor: "end" }} />
                   <Tooltip formatter={(v) => [`${v.toLocaleString()} ICC`]} {...tooltipStyle} />
                   <Bar dataKey="credits" fill="#14b8a6" radius={[0, 6, 6, 0]}
@@ -337,12 +337,12 @@ const UserAnalytics = () => {
       <Navbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
       <Sidebar sidebarOpen={sidebarOpen} />
 
-      <div className={`transition-all duration-300 ${sidebarOpen ? "ml-64" : "ml-0"} pt-24`}>
+      <div className={`transition-all duration-300 ${sidebarOpen ? "ml-64" : "ml-0"} pt-20`}>
         <div className="px-6 max-w-7xl mx-auto space-y-6 pb-10">
 
           {/* Header */}
           <div>
-            <h1 className="text-4xl font-bold text-slate-900">My Analytics</h1>
+            <h1 className="text-4xl font-bold text-slate-900 mt-5">My Analytics</h1>
             <p className="text-slate-600 mt-1">Your personal carbon credit performance</p>
           </div>
 

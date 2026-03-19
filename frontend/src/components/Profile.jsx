@@ -94,7 +94,7 @@ const Profile = () => {
       {/* Content Wrapper */}
       <div className="relative z-10">
         <div
-          className={`pt-24 transition-all duration-300 ${
+          className={`pt-20 transition-all duration-300 ${
             sidebarOpen ? "ml-64" : "ml-0"
           }`}
         >
@@ -113,9 +113,9 @@ const Profile = () => {
                       <div className="w-24 h-24 rounded-full bg-white/20 flex items-center justify-center">
                         <User className="w-12 h-12 text-white" />
                       </div>
-                      <div>
-                        <h1 className="text-3xl font-bold">{profile.name}</h1>
-                        <p className="text-emerald-100">@{profile.username}</p>
+                      <div className="text-left">
+                        <h1 className="text-3xl font-bold text-left">{profile.name}</h1>
+                        <p className="text-emerald-100 text-left">@{profile.username}</p>
                         <div className="flex items-center gap-2 mt-2">
                           <Badge className="bg-white/20 text-white border-white/30">
                             <Shield className="w-3 h-3 mr-1" />
