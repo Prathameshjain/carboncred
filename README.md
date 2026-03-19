@@ -104,7 +104,7 @@ carboncred/
 | Node.js | 16.x+ |
 | npm | 8.x+ |
 | PostgreSQL | 13+ *(or use Docker)* |
-| Docker & Docker Compose | Latest *(optional)* |
+| Docker & Docker Compose | Latest v2+ *(optional, for full stack)* |
 | MetaMask | Browser extension *(for blockchain features)* |
 
 ---
@@ -208,37 +208,84 @@ npx hardhat run scripts/deploy.js --network sepolia
 
 ### Option B — Docker Setup
 
-The `docker-compose.yml` defines three service profiles:
+The `docker-compose.yml` spins up **5 services** in a single command:
 
-| Profile | Services Included |
-|---------|------------------|
-| *(default)* | `db` (PostgreSQL only) |
-| `full` | `db` + `backend` + `frontend` |
-| `cache` | `db` + `redis` |
+| Service | Container | Port |
+|---------|-----------|------|
+| PostgreSQL 16 | `carboncred-postgres` | internal |
+| pgAdmin 4 | `carboncred-pgadmin` | `5050` |
+| ML Verification (TensorFlow/Flask) | `carboncred-ml` | internal `5001` |
+| Django Backend (Gunicorn) | `carboncred-backend` | `8000` |
+| React Frontend (Nginx) | `carboncred-frontend` | `80` |
+
+#### 1. Copy the Docker Environment Template
 
 ```bash
-# Start only the database (most common for local dev)
-docker-compose up -d
-
-# Start all services (full Docker stack)
-docker-compose --profile full up -d
-
-# Run migrations inside the container
-docker-compose exec backend python manage.py migrate
-
-# Create superuser inside the container
-docker-compose exec backend python manage.py createsuperuser
-
-# View logs
-docker-compose logs -f
-
-# Stop all services
-docker-compose down
+cp .env.docker .env
+# Optionally edit .env with your real blockchain keys
 ```
+
+> ⚠️ `.env.docker` contains pre-configured defaults for Docker networking (e.g., `POSTGRES_HOST=db`). Do **not** use `.env.example` for Docker — the host values differ.
+
+#### 2. Build & Start All Services
+
+```bash
+# Build images and start all 5 services in detached mode
+docker compose up --build -d
+```
+
+> ⏱ **First build takes ~10–15 minutes** — TensorFlow + ML model checkpoints (~660 MB each) are baked into the ML image. Subsequent builds are fast thanks to Docker layer caching.
+
+#### 3. Access the Running App
+
+| Service | URL | Credentials |
+|---------|-----|-------------|
+| 🌐 Frontend (React) | http://localhost | — |
+| ⚙️ Django API | http://localhost:8000/api/ | JWT token |
+| 🔧 Django Admin | http://localhost/admin/ | superuser |
+| 📊 Swagger Docs | http://localhost:8000/swagger/ | — |
+| 🐘 pgAdmin | http://localhost:5050 | `nesar@carboncred.com` / `nesar` |
+
+#### 4. Post-Start Commands
+
+```bash
+# Create Django superuser
+docker compose exec backend python manage.py createsuperuser
+
+# Run / re-run migrations manually
+docker compose exec backend python manage.py migrate
+
+# View live logs for all services
+docker compose logs -f
+
+# View logs for a specific service
+docker compose logs -f backend
+docker compose logs -f ml-service
+
+# Stop all services (keeps data volumes)
+docker compose down
+
+# Stop and delete all data volumes (fresh start)
+docker compose down -v
+```
+
+#### Adding PostgreSQL in pgAdmin
+
+1. Open http://localhost:5050 → login with `nesar@carboncred.com` / `nesar`
+2. Click **Add New Server**
+3. Fill in:
+   - **Name:** `CarbonCred DB`
+   - **Host:** `db`
+   - **Port:** `5432`
+   - **Database:** `carboncred`
+   - **Username:** `postgres`
+   - **Password:** `Postgre123`
 
 ---
 
 ## ▶️ Running the Services
+
+### Manual (Dev) Mode
 
 | Service | Command | URL |
 |---------|---------|-----|
@@ -247,9 +294,21 @@ docker-compose down
 | **Swagger Docs** | *(backend must be running)* | http://127.0.0.1:8000/swagger/ |
 | **ReDoc** | *(backend must be running)* | http://127.0.0.1:8000/redoc/ |
 | **Django Admin** | *(backend must be running)* | http://127.0.0.1:8000/admin/ |
-| **PostgreSQL** | `docker-compose up -d` | `localhost:5432` |
+| **PostgreSQL** | `docker compose up db -d` | `localhost:5432` |
 
 > Both the backend and frontend dev servers support **hot reload** — changes take effect without restarting.
+
+### Docker (Production) Mode
+
+| Service | URL |
+|---------|-----|
+| 🌐 React Frontend (via Nginx) | http://localhost |
+| ⚙️ Django API | http://localhost:8000/api/ |
+| 🔧 Django Admin | http://localhost/admin/ |
+| 📊 Swagger / ReDoc | http://localhost:8000/swagger/ |
+| 🐘 pgAdmin | http://localhost:5050 |
+
+> The Nginx container reverse-proxies `/api/`, `/admin/`, and `/media/` to the Django backend on port 8000.
 
 ---
 
@@ -451,11 +510,34 @@ python manage.py shell                # Open Django shell
 ### Docker
 
 ```bash
-docker-compose up -d                              # Start DB only
-docker-compose --profile full up -d               # Start all services
-docker-compose down                               # Stop all services
-docker-compose logs -f backend                    # Follow backend logs
-docker-compose exec backend python manage.py migrate
+# Build and start all 5 services
+docker compose up --build -d
+
+# Start only the DB (useful for local dev)
+docker compose up db -d
+
+# Rebuild a single service after code changes
+docker compose up --build backend -d
+
+# Stop all services (data volumes preserved)
+docker compose down
+
+# Stop and delete all volumes (fresh start)
+docker compose down -v
+
+# Follow logs
+docker compose logs -f                            # All services
+docker compose logs -f backend                    # Backend only
+docker compose logs -f ml-service                 # ML service only
+docker compose logs -f frontend                   # Nginx/frontend only
+
+# Run Django management commands inside the container
+docker compose exec backend python manage.py migrate
+docker compose exec backend python manage.py createsuperuser
+docker compose exec backend python manage.py shell
+
+# Restart a single service without full rebuild
+docker compose restart backend
 ```
 
 ### Frontend
