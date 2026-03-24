@@ -208,6 +208,103 @@ npx hardhat run scripts/deploy.js --network sepolia
 
 ### Option B — Docker Setup
 
+> **No source code needed.** All images are pre-built and hosted on Docker Hub. You only need `docker-compose.yml` and a `.env` file.
+> 
+> 📄 **For a full step-by-step guide, see [SETUP_USING_DOCKER.md](./SETUP_USING_DOCKER.md)**
+
+The `docker-compose.yml` spins up **5 services** in a single command:
+
+| Service | Container | Port |
+|---------|-----------|------|
+| PostgreSQL 16 | `carboncred-postgres` | internal |
+| pgAdmin 4 | `carboncred-pgadmin` | `5050` |
+| ML Verification (TensorFlow/Flask) | `carboncred-ml` | internal `5001` |
+| Django Backend (Gunicorn) | `carboncred-backend` | `8000` |
+| React Frontend (Nginx) | `carboncred-frontend` | `80` |
+
+#### 1. Install Docker Desktop
+
+Download and install from https://docs.docker.com/desktop/ — this is the **only prerequisite**.
+
+#### 2. Create Your `.env` File
+
+In the same folder as `docker-compose.yml`, create a `.env` file:
+
+```env
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=Postgre123
+POSTGRES_DB=carboncred
+DJANGO_SECRET_KEY=django-insecure-change-me-in-production
+DJANGO_DEBUG=False
+
+# Blockchain (optional — app works without these)
+ALCHEMY_URL=
+BLOCKCHAIN_PRIVATE_KEY=
+CONTRACT_ADDRESS=
+BLOCKCHAIN_CHAIN_ID=11155111
+```
+
+> ⚠️ Do **not** use `.env.example` for Docker — host values differ. Always create `.env` from the template above.
+
+#### 3. Start All Services
+
+```bash
+docker compose up -d
+```
+
+Docker will automatically pull `nesaw/carbon-backend`, `nesaw/carbon-frontend`, and `nesaw/carbon-ml` from Docker Hub and start all 5 services. **No build step needed.**
+
+> ⏱ **First run takes 5–10 minutes** to pull images. Subsequent starts take ~30 seconds.
+
+#### 4. Access the Running App
+
+| Service | URL | Credentials |
+|---------|-----|-------------|
+| 🌐 Frontend (React) | http://localhost | — |
+| ⚙️ Django API | http://localhost:8000/api/ | JWT token |
+| 🔧 Django Admin | http://localhost/admin/ | superuser |
+| 📊 Swagger Docs | http://localhost:8000/swagger/ | — |
+| 🐘 pgAdmin | http://localhost:5050 | `nesar@carboncred.com` / `nesar` |
+
+#### 5. Post-Start Commands
+
+```bash
+# Create Django superuser (first time only)
+docker compose exec backend python manage.py createsuperuser
+
+# Run migrations manually
+docker compose exec backend python manage.py migrate
+
+# View live logs
+docker compose logs -f
+
+# View logs for a specific service
+docker compose logs -f backend
+docker compose logs -f ml-service
+
+# Stop all services (data volumes preserved)
+docker compose down
+
+# Stop and delete all data volumes (fresh start)
+docker compose down -v
+
+# Pull latest images (when team pushes updates)
+docker compose pull && docker compose up -d
+```
+
+#### Adding PostgreSQL in pgAdmin
+
+1. Open http://localhost:5050 → login with `nesar@carboncred.com` / `nesar`
+2. Click **Add New Server** and fill in:
+
+| Field | Value |
+|-------|-------|
+| Host | `db` |
+| Port | `5432` |
+| Database | `carboncred` |
+| Username | `postgres` |
+| Password | `Postgre123` |
+
 The `docker-compose.yml` spins up **5 services** in a single command:
 
 | Service | Container | Port |

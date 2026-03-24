@@ -2,12 +2,10 @@
 # CarbonCred - Docker Compose (Production)
 # =========================================
 # Services: db, pgadmin, backend, ml-service, frontend
-# Run: docker compose up --build -d
-# pgAdmin: http://localhost:5050  (nesar / nesar)
+# Run: docker compose up -d
+# pgAdmin: http://localhost:5050  (nesar@carboncred.com / nesar)
 # App:     http://localhost
 # API:     http://localhost/api/  or http://localhost:8000/api/
-
-version: '3.9'
 
 services:
 
@@ -57,9 +55,7 @@ services:
   # ML Verification Service (TensorFlow)
   # =========================================
   ml-service:
-    build:
-      context: ./ml-verification
-      dockerfile: Dockerfile
+    image: nesaw/carbon-ml:latest
     container_name: carboncred-ml
     restart: unless-stopped
     environment:
@@ -77,9 +73,7 @@ services:
   # Django Backend (Gunicorn)
   # =========================================
   backend:
-    build:
-      context: .
-      dockerfile: Dockerfile.backend
+    image: nesaw/carbon-backend:latest
     container_name: carboncred-backend
     restart: unless-stopped
     environment:
@@ -122,9 +116,7 @@ services:
   # React Frontend (Nginx)
   # =========================================
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
+    image: nesaw/carbon-frontend:latest
     container_name: carboncred-frontend
     restart: unless-stopped
     ports:
