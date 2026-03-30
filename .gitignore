@@ -188,3 +188,4 @@ secrets/
 *.pem
 *.key
 private/
+Diagrams/
